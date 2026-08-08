@@ -56,12 +56,6 @@
     .brand strong { display: block; font-size: 15px; font-weight: 700; }
     .brand span { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
     .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .db-status {
-      font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 999px;
-      border: 1px solid var(--border); background: var(--cream); color: var(--muted);
-    }
-    .db-status.ok { background: #F0F8C8; border-color: #C8DC30; color: #3F4A12; }
-    .db-status.bad { background: #FEF3F2; border-color: #FECACA; color: #B42318; }
     .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
     .view { display: none; }
     .view.active { display: block; }
@@ -365,7 +359,6 @@
         <img class="brand-logo" src="assets/voltaris-logo.png" alt="Voltaris Energy" />
       </div>
       <div class="top-actions">
-        <div id="dbStatus" class="db-status">Checking database…</div>
         <button type="button" class="btn btn-primary" id="topAddBtn">+ Add new lead</button>
       </div>
     </div>
@@ -581,7 +574,6 @@
     const toast = document.getElementById("toast");
     const tableWrap = document.getElementById("tableWrap");
     const searchInput = document.getElementById("searchInput");
-    const dbStatus = document.getElementById("dbStatus");
     const pipelineEl = document.getElementById("pipeline");
     const filterHint = document.getElementById("filterHint");
     const sidebar = document.getElementById("notesSidebar");
@@ -625,21 +617,6 @@
       clearTimeout(showToast._t);
       showToast._t = setTimeout(() => toast.classList.remove("show"), 2800);
     }
-
-    function setDbStatus(ok, detail) {
-      dbStatus.textContent = ok ? "Database connected" : (detail || "Database offline");
-      dbStatus.className = "db-status " + (ok ? "ok" : "bad");
-    }
-
-    async function checkHealth() {
-      try {
-        await api("/api/health");
-        setDbStatus(true);
-        return true;
-      } catch {
-        setDbStatus(false, "Start the server (start-leads.bat)");
-        return false;
-      }
     }
 
     function switchView(view) {
@@ -934,7 +911,6 @@
         switchView("dashboard");
       } catch (err) {
         showToast(err.message || "Could not save.");
-        await checkHealth();
       } finally {
         formSubmitBtn.disabled = false;
       }
@@ -1200,7 +1176,6 @@
 
       try {
         const data = await api("/api/leads");
-        setDbStatus(true);
         allLeadsCache = data.leads || [];
         const counts = countByStatus(allLeadsCache);
         renderPipeline(counts);
@@ -1294,7 +1269,6 @@
           });
         });
       } catch (err) {
-        setDbStatus(false, "Start the server (start-leads.bat)");
         pipelineEl.innerHTML = "";
         tableWrap.innerHTML = `
           <div class="empty">
@@ -1322,7 +1296,6 @@
     } else {
       switchView("dashboard");
     }
-    checkHealth();
   </script>
 </body>
 </html>
