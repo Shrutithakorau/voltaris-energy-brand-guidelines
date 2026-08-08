@@ -544,6 +544,14 @@
     const formSubtitle = document.getElementById("formSubtitle");
     const formHint = document.getElementById("formHint");
     const formSubmitBtn = document.getElementById("formSubmitBtn");
+    const convertOpportunityBtn = document.getElementById("convertOpportunityBtn");
+    const moveQuotedBtn = document.getElementById("moveQuotedBtn");
+    const moveClosedWonBtn = document.getElementById("moveClosedWonBtn");
+    const moveClosedLostBtn = document.getElementById("moveClosedLostBtn");
+    const openFormNotesBtn = document.getElementById("openFormNotesBtn");
+    const formStatusBadge = document.getElementById("formStatusBadge");
+    const statusHelp = document.getElementById("statusHelp");
+    const workflowSteps = document.getElementById("workflowSteps");
 
     async function api(path, options = {}) {
       const res = await fetch(API_BASE + path, {
