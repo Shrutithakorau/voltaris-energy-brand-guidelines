@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Voltaris Energy — Lead Manager</title>
+  <title>Voltaris Energy - Lead Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -677,7 +677,7 @@
         clearFieldErrors();
         fillForm(lead);
         formTitle.textContent = "Edit " + (statusLabels[lead.status] || "record");
-        formSubtitle.innerHTML = `Editing <strong>${escapeHtml(lead.customerName)}</strong> · Status: <strong>${escapeHtml(statusLabels[lead.status] || lead.status)}</strong>`;
+        formSubtitle.innerHTML = `Editing <strong>${escapeHtml(lead.customerName)}</strong> - Status: <strong>${escapeHtml(statusLabels[lead.status] || lead.status)}</strong>`;
         formHint.textContent = canAddNotes(lead.status)
           ? "Update details here. Use Notes on the dashboard for comments."
           : "Update details, then move this lead to Opportunity when ready.";
@@ -763,7 +763,7 @@
       editingStatus = res.lead.status;
       updateFormStatusUI(editingStatus);
       formTitle.textContent = "Edit " + (statusLabels[editingStatus] || "record");
-      formSubtitle.innerHTML = `Editing <strong>${escapeHtml(res.lead.customerName)}</strong> · Status: <strong>${escapeHtml(statusLabels[editingStatus] || editingStatus)}</strong>`;
+      formSubtitle.innerHTML = `Editing <strong>${escapeHtml(res.lead.customerName)}</strong> - Status: <strong>${escapeHtml(statusLabels[editingStatus] || editingStatus)}</strong>`;
       formHint.textContent = successMessage;
       showToast(successMessage);
       return res;
@@ -790,8 +790,8 @@
         editingStatus = res.lead.status;
         updateFormStatusUI(editingStatus);
         formTitle.textContent = "Edit " + (statusLabels[editingStatus] || "record");
-        formSubtitle.innerHTML = `Editing <strong>${escapeHtml(res.lead.customerName)}</strong> · Status: <strong>${escapeHtml(statusLabels[editingStatus] || editingStatus)}</strong>`;
-        formHint.textContent = "Opportunity unlocked — notes open in the sidebar.";
+        formSubtitle.innerHTML = `Editing <strong>${escapeHtml(res.lead.customerName)}</strong> - Status: <strong>${escapeHtml(statusLabels[editingStatus] || editingStatus)}</strong>`;
+        formHint.textContent = "Opportunity unlocked - notes open in the sidebar.";
         showToast("Converted to Opportunity. Notes opened in sidebar.");
         openNotesSidebar(editingLeadId, { focusComposer: true });
       } catch (err) {
@@ -833,7 +833,7 @@
       moveClosedWonBtn.disabled = true;
       moveClosedLostBtn.disabled = true;
       try {
-        await advanceFormStatus("closed_won", "Closed won — moved to Installation.");
+        await advanceFormStatus("closed_won", "Closed won - moved to Installation.");
       } catch (err) {
         showToast(err.message || "Could not close as won.");
       } finally {
@@ -994,17 +994,17 @@
       openFormNotesBtn.hidden = !(isEditing && canAddNotes(s));
 
       if (!isEditing) {
-        statusHelp.textContent = "Workflow: Lead → Opportunity → Quoted → Closed won/lost → Installation. Save first to begin.";
+        statusHelp.textContent = "Workflow: Lead -> Opportunity -> Quoted -> Closed won/lost -> Installation. Save first to begin.";
       } else if (s === "lead") {
-        statusHelp.textContent = "Step 1 of 5 — Next: move to Opportunity.";
+        statusHelp.textContent = "Step 1 of 5 - Next: move to Opportunity.";
       } else if (s === "opportunity") {
-        statusHelp.textContent = "Step 2 — Add notes in the sidebar, then move to Quoted.";
+        statusHelp.textContent = "Step 2 - Add notes in the sidebar, then move to Quoted.";
       } else if (s === "quoted") {
-        statusHelp.textContent = "Step 3 — Quote sent. Close as Won (goes to Installation) or Lost.";
+        statusHelp.textContent = "Step 3 - Quote sent. Close as Won (goes to Installation) or Lost.";
       } else if (s === "closed_lost") {
-        statusHelp.textContent = "Closed lost — pipeline ended. Notes remain available.";
+        statusHelp.textContent = "Closed lost - pipeline ended. Notes remain available.";
       } else if (s === "installation") {
-        statusHelp.textContent = "Closed won — now in Installation phase.";
+        statusHelp.textContent = "Closed won - now in Installation phase.";
       } else {
         statusHelp.textContent = "Follow the workflow buttons to progress.";
       }
@@ -1038,7 +1038,7 @@
       overlay.classList.add("open");
       sidebar.classList.toggle("mode-lost", mode === "closedLost");
       sidebar.setAttribute("aria-hidden", "false");
-      notesList.innerHTML = '<div class="notes-empty">Loading notes…</div>';
+      notesList.innerHTML = '<div class="notes-empty">Loading notes...</div>';
 
       try {
         const data = await api("/api/leads/" + encodeURIComponent(leadId) + "/notes");
@@ -1046,13 +1046,13 @@
         document.getElementById("sidebarName").textContent =
           mode === "closedLost" ? "Close as lost" : lead.customerName;
         document.getElementById("sidebarMeta").textContent =
-          (statusLabels[lead.status] || lead.status) + " · " + (productLabels[lead.productType] || "");
+          (statusLabels[lead.status] || lead.status) + " - " + (productLabels[lead.productType] || "");
         document.getElementById("sidebarSummary").innerHTML = `
           <div><strong>Customer:</strong> ${escapeHtml(lead.customerName)}</div>
           <div><strong>Mobile:</strong> ${escapeHtml(lead.mobile)}</div>
           <div><strong>Email:</strong> ${escapeHtml(lead.email)}</div>
           <div><strong>Address:</strong> ${escapeHtml(lead.address)}</div>
-          <div style="margin-top:6px"><strong>NMI:</strong> ${escapeHtml(lead.nmi || "—")} · <strong>Phase:</strong> ${escapeHtml(phaseLabels[lead.phase] || lead.phase)}</div>
+          <div style="margin-top:6px"><strong>NMI:</strong> ${escapeHtml(lead.nmi || "-")} - <strong>Phase:</strong> ${escapeHtml(phaseLabels[lead.phase] || lead.phase)}</div>
         `;
 
         const allowNotes = canAddNotes(lead.status) || mode === "closedLost";
@@ -1140,9 +1140,9 @@
           body: JSON.stringify({ status })
         });
         if (res.movedToInstallation) {
-          showToast("Closed won — moved to Installation phase.");
+          showToast("Closed won - moved to Installation phase.");
         } else if (status === "opportunity") {
-          showToast("Moved to Opportunity — add notes in the sidebar.");
+          showToast("Moved to Opportunity - add notes in the sidebar.");
         } else {
           showToast("Status updated.");
         }
@@ -1184,7 +1184,7 @@
 
     async function renderDashboard() {
       const query = (searchInput.value || "").trim();
-      tableWrap.innerHTML = '<div class="empty"><p>Loading leads from database…</p></div>';
+      tableWrap.innerHTML = '<div class="empty"><p>Loading leads from database...</p></div>';
 
       try {
         const data = await api("/api/leads");
@@ -1250,7 +1250,7 @@
                   <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
                   <td>${escapeHtml(l.address)}</td>
                   <td><span class="pill ${productClass(l.productType)}">${escapeHtml(productLabels[l.productType] || l.productType)}</span></td>
-                  <td class="muted">${escapeHtml(l.nmi || "—")}</td>
+                  <td class="muted">${escapeHtml(l.nmi || "-")}</td>
                   <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
                   <td>${statusSelectHtml(l)}</td>
                   <td class="muted">${escapeHtml(formatDate(l.createdAt))}</td>
@@ -1286,8 +1286,8 @@
         pipelineEl.innerHTML = "";
         tableWrap.innerHTML = `
           <div class="empty">
-            <h3>Unable to load leads</h3>
-            <p>Run <strong>start-leads.bat</strong>, then open <strong>http://127.0.0.1:8787/leads.html</strong></p>
+            <h3>Cannot reach local server</h3>
+            <p>Do not open the HTML file directly. Double-click <strong>start-leads.bat</strong> and use <strong>http://127.0.0.1:8787/leads.html</strong></p>
           </div>
         `;
       }
