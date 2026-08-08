@@ -303,6 +303,37 @@
     #formNoteBody { min-height: 90px; margin-bottom: 10px; }
     #formNotesList { margin-top: 14px; }
 
+  
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .workflow-steps { grid-template-columns: 1fr 1fr; }
+    }
+    .wf-step {
+      border: 1px solid var(--border-mid);
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+    }
+    .wf-step.done {
+      background: #F0F8C8;
+      color: #3F4A12;
+      border-color: #C8DC30;
+    }
+    .wf-step.current {
+      background: #FFF4C8;
+      color: var(--dark);
+      border-color: var(--cta);
+      box-shadow: inset 0 0 0 1px var(--cta);
+    }
+
   </style>
 </head>
 <body>
@@ -393,18 +424,21 @@
           </div>
         </div>
         <div class="status-box" id="statusBox">
-          <div class="status-box-top">
+          <div class="section-label" style="margin:0 0 10px">Workflow</div>
+          <div class="workflow-steps" id="workflowSteps" aria-label="Pipeline stages"></div>
+          <div class="status-box-top" style="margin-top:14px">
             <div>
-              <div class="section-label" style="margin:0 0 6px">Pipeline status</div>
               <span class="status-badge" id="formStatusBadge">Lead</span>
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="btn btn-primary" id="convertOpportunityBtn" hidden>+ Convert to Opportunity</button>
-              <button type="button" class="btn btn-primary" id="moveQuotedBtn" hidden>Move to Quoted</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;" id="workflowActions">
+              <button type="button" class="btn btn-primary" id="convertOpportunityBtn" hidden>Next: Opportunity</button>
+              <button type="button" class="btn btn-primary" id="moveQuotedBtn" hidden>Next: Quoted</button>
+              <button type="button" class="btn btn-primary" id="moveClosedWonBtn" hidden>Closed won</button>
+              <button type="button" class="btn btn-secondary" id="moveClosedLostBtn" hidden>Closed lost</button>
               <button type="button" class="btn btn-notes" id="openFormNotesBtn" hidden>Open notes</button>
             </div>
           </div>
-          <p class="hint" id="statusHelp">Save the lead first, then convert it to Opportunity to add notes in the sidebar.</p>
+          <p class="hint" id="statusHelp">Save the lead first, then follow the workflow: Lead → Opportunity → Quoted → Closed won/lost → Installation.</p>
         </div>
 
         <div class="form-actions">
@@ -462,6 +496,22 @@
     ];
     const statusLabels = Object.fromEntries(statusOptions.map((s) => [s.value, s.label]));
     const NOTE_STATUSES = new Set(["opportunity", "quoted", "closed_won", "closed_lost", "installation"]);
+    const WORKFLOW_ORDER = ["lead", "opportunity", "quoted", "closed_lost_or_won", "installation"];
+    const WORKFLOW_LABELS = {
+      lead: "1. Lead",
+      opportunity: "2. Opportunity",
+      quoted: "3. Quoted",
+      closed_lost_or_won: "4. Closed",
+      installation: "5. Installation"
+    };
+    const ALLOWED_NEXT = {
+      lead: ["opportunity"],
+      opportunity: ["quoted"],
+      quoted: ["closed_won", "closed_lost"],
+      closed_won: ["installation"],
+      closed_lost: [],
+      installation: []
+    };
 
     const pipelineFilters = [
       { key: "all", label: "All" },
@@ -707,14 +757,14 @@
       openNotesSidebar(editingLeadId, { focusComposer: true });
     });
 
-    moveQuotedBtn.addEventListener("click", async () => {
+        moveQuotedBtn.addEventListener("click", async () => {
       if (editingStatus !== "opportunity") {
         showToast("Only Opportunity records can move to Quoted.");
         return;
       }
       moveQuotedBtn.disabled = true;
       try {
-        await advanceFormStatus("quoted", "Moved to Opportunity — Quoted.");
+        await advanceFormStatus("quoted", "Moved to Quoted.");
         openNotesSidebar(editingLeadId, { focusComposer: true });
       } catch (err) {
         showToast(err.message || "Could not move to quoted.");
@@ -722,6 +772,41 @@
         moveQuotedBtn.disabled = false;
       }
     });
+
+    moveClosedWonBtn.addEventListener("click", async () => {
+      if (editingStatus !== "quoted") {
+        showToast("Only Quoted records can be closed won.");
+        return;
+      }
+      moveClosedWonBtn.disabled = true;
+      moveClosedLostBtn.disabled = true;
+      try {
+        await advanceFormStatus("closed_won", "Closed won — moved to Installation.");
+      } catch (err) {
+        showToast(err.message || "Could not close as won.");
+      } finally {
+        moveClosedWonBtn.disabled = false;
+        moveClosedLostBtn.disabled = false;
+      }
+    });
+
+    moveClosedLostBtn.addEventListener("click", async () => {
+      if (editingStatus !== "quoted") {
+        showToast("Only Quoted records can be closed lost.");
+        return;
+      }
+      moveClosedWonBtn.disabled = true;
+      moveClosedLostBtn.disabled = true;
+      try {
+        await advanceFormStatus("closed_lost", "Marked as Closed lost.");
+      } catch (err) {
+        showToast(err.message || "Could not close as lost.");
+      } finally {
+        moveClosedWonBtn.disabled = false;
+        moveClosedLostBtn.disabled = false;
+      }
+    });
+
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -778,24 +863,59 @@
       return NOTE_STATUSES.has(status);
     }
 
+    function workflowStageKey(status) {
+      if (status === "closed_won" || status === "closed_lost") return "closed_lost_or_won";
+      return status || "lead";
+    }
+
+    function renderWorkflowSteps(status) {
+      const currentKey = workflowStageKey(status);
+      const order = ["lead", "opportunity", "quoted", "closed_lost_or_won", "installation"];
+      const currentIdx = order.indexOf(currentKey);
+      workflowSteps.innerHTML = order.map((key, idx) => {
+        let cls = "wf-step";
+        if (status === "closed_lost" && key === "installation") {
+          cls += ""; // installation not reached
+        } else if (idx < currentIdx) {
+          cls += " done";
+        } else if (idx === currentIdx) {
+          cls += " current";
+        }
+        // closed lost marks closed step current/done but not installation
+        if (status === "closed_lost" && key === "closed_lost_or_won") cls = "wf-step current";
+        if (status === "installation" && key === "closed_lost_or_won") cls = "wf-step done";
+        return `<div class="${cls}">${WORKFLOW_LABELS[key]}</div>`;
+      }).join("");
+    }
+
     function updateFormStatusUI(status) {
-      const label = statusLabels[status] || status || "Lead";
+      const s = status || "lead";
+      const label = statusLabels[s] || s;
       formStatusBadge.textContent = label;
-      formStatusBadge.className = "status-badge " + (status || "lead");
+      formStatusBadge.className = "status-badge " + s;
+      renderWorkflowSteps(s);
+
       const isEditing = Boolean(editingLeadId);
-      const isLead = (status || "lead") === "lead";
-      const isOpportunity = (status || "") === "opportunity";
-      convertOpportunityBtn.hidden = !(isEditing && isLead);
-      moveQuotedBtn.hidden = !(isEditing && isOpportunity);
-      openFormNotesBtn.hidden = !(isEditing && canAddNotes(status));
+      convertOpportunityBtn.hidden = !(isEditing && s === "lead");
+      moveQuotedBtn.hidden = !(isEditing && s === "opportunity");
+      moveClosedWonBtn.hidden = !(isEditing && s === "quoted");
+      moveClosedLostBtn.hidden = !(isEditing && s === "quoted");
+      openFormNotesBtn.hidden = !(isEditing && canAddNotes(s));
+
       if (!isEditing) {
-        statusHelp.textContent = "Save the lead first, then convert it to Opportunity to add notes in the sidebar.";
-      } else if (isLead) {
-        statusHelp.textContent = "Ready to progress? Convert this lead to Opportunity — notes open in the sidebar.";
-      } else if (isOpportunity) {
-        statusHelp.textContent = "Opportunity stage. Add notes in the sidebar, or move to Quoted when the quote is ready.";
+        statusHelp.textContent = "Workflow: Lead → Opportunity → Quoted → Closed won/lost → Installation. Save first to begin.";
+      } else if (s === "lead") {
+        statusHelp.textContent = "Step 1 of 5 — Next: move to Opportunity.";
+      } else if (s === "opportunity") {
+        statusHelp.textContent = "Step 2 — Add notes in the sidebar, then move to Quoted.";
+      } else if (s === "quoted") {
+        statusHelp.textContent = "Step 3 — Quote sent. Close as Won (goes to Installation) or Lost.";
+      } else if (s === "closed_lost") {
+        statusHelp.textContent = "Closed lost — pipeline ended. Notes remain available.";
+      } else if (s === "installation") {
+        statusHelp.textContent = "Closed won — now in Installation phase.";
       } else {
-        statusHelp.textContent = "Opportunity pipeline active. Use Open notes to view and add comments in the sidebar.";
+        statusHelp.textContent = "Follow the workflow buttons to progress.";
       }
     }
 
@@ -933,9 +1053,12 @@
 
     function statusSelectHtml(lead) {
       const current = lead.status;
+      const next = ALLOWED_NEXT[current] || [];
+      const options = statusOptions.filter((s) => s.value === current || next.includes(s.value));
+      // If installation came from closed_won, show installation only
       return `
         <select class="status-select ${escapeAttr(lead.status)}" data-status-id="${escapeAttr(lead.id)}" aria-label="Status for ${escapeAttr(lead.customerName)}">
-          ${statusOptions.map((s) => `
+          ${options.map((s) => `
             <option value="${s.value}" ${s.value === current ? "selected" : ""}>${s.label}</option>
           `).join("")}
         </select>

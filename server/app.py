@@ -38,6 +38,16 @@ NOTE_STATUSES = {
     "closed_lost",
     "installation",
 }
+
+# Strict pipeline: lead -> opportunity -> quoted -> closed_won|closed_lost -> installation (from won)
+ALLOWED_TRANSITIONS = {
+    "lead": {"opportunity"},
+    "opportunity": {"quoted"},
+    "quoted": {"closed_won", "closed_lost"},
+    "closed_won": {"installation"},
+    "closed_lost": set(),
+    "installation": set(),
+}
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
@@ -435,6 +445,45 @@ class Handler(SimpleHTTPRequestHandler):
                 return
 
             current = row_to_lead(existing)
+            current_status = current["status"]
+            requested_status = str(
+                payload.get("status", current_status)
+            ).strip().lower()
+
+            if requested_status not in STATUSES:
+                self._json(400, {"error": "Invalid status."})
+                return
+
+            # Enforce sequential workflow when status changes
+            if requested_status != current_status:
+                allowed = ALLOWED_TRANSITIONS.get(current_status, set())
+                # closed_won is requested by user but stored as installation
+                if requested_status == "closed_won":
+                    if "closed_won" not in allowed and "installation" not in allowed:
+                        # quoted can go to closed_won
+                        if "closed_won" not in allowed:
+                            self._json(
+                                400,
+                                {
+                                    "error": f"Cannot move from {current_status} to closed_won. Follow the pipeline."
+                                },
+                            )
+                            return
+                elif requested_status not in allowed:
+                    # Allow no-op already handled; installation may come from closed_won normalize
+                    if not (
+                        requested_status == "installation"
+                        and current_status == "quoted"
+                        and "closed_won" in allowed
+                    ):
+                        next_steps = ", ".join(sorted(allowed)) or "none"
+                        self._json(
+                            400,
+                            {
+                                "error": f"Invalid step. From {current_status} you can only move to: {next_steps}."
+                            },
+                        )
+                        return
 
             # Merge: allow status-only updates or full field updates
             merged = {
@@ -445,7 +494,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "productType": payload.get("productType", current["productType"]),
                 "nmi": payload.get("nmi", current["nmi"]),
                 "phase": payload.get("phase", current["phase"]),
-                "status": payload.get("status", current["status"]),
+                "status": requested_status,
             }
 
             data, err = validate_lead(merged)
@@ -453,7 +502,6 @@ class Handler(SimpleHTTPRequestHandler):
                 self._json(400, {"error": err})
                 return
 
-            requested_status = str(payload.get("status", current["status"])).strip().lower()
             final_status = data["status"]
             updated_at = utc_now()
 
