@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voltaris Energy — Website Feedback</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cta: #FFC70A;
+      --cream: #F7F5EE;
+      --white: #FFFFFF;
+      --dark: #1A1E1B;
+      --mid: #4A4F46;
+      --muted: #757870;
+      --border: #E2DDD4;
+      --navy: #11234B;
+      --font-serif: "DM Serif Display", serif;
+      --font-sans: "DM Sans", sans-serif;
+      --max: 820px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      color: var(--dark);
+      background: var(--cream);
+      line-height: 1.65;
+      font-size: 16px;
+    }
+    a { color: var(--navy); }
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #102445 100%);
+      color: #fff;
+      padding: 56px 24px 48px;
+    }
+    .hero-inner, .wrap { max-width: var(--max); margin: 0 auto; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--cta);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .hero p { color: rgba(255,255,255,.82); max-width: 48ch; }
+    .nav {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .nav a {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--cta);
+      color: #090909;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .nav a.secondary {
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+    .wrap { padding: 32px 24px 72px; }
+    section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 28px 32px;
+      margin-bottom: 18px;
+    }
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 1.55rem;
+      font-weight: 400;
+      margin-bottom: 14px;
+    }
+    ol, ul { margin-left: 1.15em; color: var(--mid); }
+    li { margin-bottom: 10px; }
+    li strong { color: var(--dark); }
+    .wins {
+      border-left: 4px solid var(--cta);
+      background: #fffaf0;
+    }
+    footer {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px 48px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Website review · August 2026</div>
+      <h1>Voltaris Energy — Website Feedback</h1>
+      <p>Notes on <a href="https://www.voltarisenergy.com.au" style="color:var(--cta)">voltarisenergy.com.au</a>, ordered roughly by impact.</p>
+      <div class="nav">
+        <a href="./">Brand guidelines</a>
+        <a class="secondary" href="https://github.com/Shrutithakorau/voltaris-energy-brand-guidelines">GitHub repo</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section>
+      <h2>High priority</h2>
+      <ol>
+        <li><strong>Price mismatch</strong> — Meta description says systems from <strong>$22,990</strong>; homepage packages show <strong>from $7,000 / $8,000</strong>. Align one source of truth and clarify what “from” includes.</li>
+        <li><strong>Rebate claims are vague</strong> — Tighten copy and add clear eligibility disclaimers.</li>
+        <li><strong>Lead form is too long / off-brief</strong> — Split solar quote vs other VEU-style upgrades.</li>
+        <li><strong>Duplicate / weak rebate section</strong> — “Available Battery Rebates” repeats the section intro.</li>
+        <li><strong>Social proof is thin</strong> — Only two residential testimonials; add reviews, photos, or case studies.</li>
+        <li><strong>No structured data / thin trust footer</strong> — Add JSON-LD, ABN, address, email, licence details.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Content &amp; messaging</h2>
+      <ol start="7">
+        <li><strong>Copy sounds AI-padded</strong> — Trim repeated “today / now / always.”</li>
+        <li><strong>Headline spacing quirks</strong> — Check joins like “withSmarter” / “Batteryfor.”</li>
+        <li><strong>Capitalisation inconsistency</strong> — e.g. “Experienced installation Team.”</li>
+        <li><strong>Package CTAs feel unfinished</strong> — “Get a free quote ?”</li>
+        <li><strong>“Australia-wide” vs Melbourne-first</strong> — Back national claims with proof.</li>
+        <li><strong>Savings calculator trust</strong> — Show assumptions behind ROI numbers.</li>
+        <li><strong>Commercial page polish</strong> — Editorial pass needed.</li>
+        <li><strong>Privacy link in consent</strong> — Point to a real privacy policy page.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>UX / conversion</h2>
+      <ol start="15">
+        <li><strong>Too many competing CTAs</strong> — One primary action per section.</li>
+        <li><strong>Make phone persistent on mobile</strong> — Sticky click-to-call for 0430 741 441.</li>
+        <li><strong>Partner logos without context</strong> — Add “installed &amp; supported by Voltaris.”</li>
+        <li><strong>FAQ is short</strong> — Add rebates, phase, existing solar, backup limits, quote timing.</li>
+        <li><strong>Only two package cards</strong> — Add a third tier or custom path.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Technical / accessibility / SEO</h2>
+      <ol start="20">
+        <li><strong>Title vs H1 mismatch</strong> — Align primary message.</li>
+        <li><strong>www vs non-www</strong> — One preferred host + redirect.</li>
+        <li><strong>Empty image alts</strong> — Meaningful alt on product/hero images.</li>
+        <li><strong>No skip-to-content link</strong></li>
+        <li><strong>Confirm analytics</strong> — GA4/GTM/ads pixels.</li>
+        <li><strong>No blog/guides</strong> — Helpful for SEO and education.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Brand / design</h2>
+      <ol start="26">
+        <li><strong>Strong visual system</strong> — Keep yellow CTA, navy, cream, pill nav.</li>
+        <li><strong>Cream + muted grey contrast</strong> — Check WCAG.</li>
+        <li><strong>Motion</strong> — Respect <code>prefers-reduced-motion</code>.</li>
+      </ol>
+    </section>
+
+    <section class="wins">
+      <h2>Biggest wins</h2>
+      <p style="color:var(--mid)">Reconcile pricing, shorten the quote form to solar/battery, strengthen trust (reviews + business details), and clean rebate/disclaimer copy.</p>
+    </section>
+  </div>
+
+  <footer>
+    Published with the Voltaris Energy brand guidelines repo.
+  </footer>
+</body>
+</html>

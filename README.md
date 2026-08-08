@@ -6,6 +6,8 @@ Brand system documentation derived from [voltarisenergy.com.au](https://www.volt
 
 **Live HTML guidelines:** https://shrutithakorau.github.io/voltaris-energy-brand-guidelines/
 
+**Website feedback (HTML):** https://shrutithakorau.github.io/voltaris-energy-brand-guidelines/website-feedback.html
+
 ## Files
 
 | File | Description |
@@ -17,3 +19,4 @@ Brand system documentation derived from [voltarisenergy.com.au](https://www.volt
 ## Local
 
 Open `Voltaris-Energy-Brand-Guidelines.html` in any browser.
+
