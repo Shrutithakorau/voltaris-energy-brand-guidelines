@@ -564,6 +564,7 @@
     ];
 
     let currentStatusFilter = "all";
+    let dbConnected = false;
     let allLeadsCache = [];
     let activeLeadId = null;
     let sidebarMode = "notes"; // notes | closedLost
@@ -616,6 +617,17 @@
       toast.classList.add("show");
       clearTimeout(showToast._t);
       showToast._t = setTimeout(() => toast.classList.remove("show"), 2800);
+    }
+
+    async function checkHealth() {
+      try {
+        await api("/api/health");
+        dbConnected = true;
+        return true;
+      } catch {
+        dbConnected = false;
+        return false;
+      }
     }
     }
 
@@ -1176,6 +1188,7 @@
 
       try {
         const data = await api("/api/leads");
+        dbConnected = true;
         allLeadsCache = data.leads || [];
         const counts = countByStatus(allLeadsCache);
         renderPipeline(counts);
@@ -1269,10 +1282,11 @@
           });
         });
       } catch (err) {
+        dbConnected = false;
         pipelineEl.innerHTML = "";
         tableWrap.innerHTML = `
           <div class="empty">
-            <h3>Database not connected</h3>
+            <h3>Unable to load leads</h3>
             <p>Run <strong>start-leads.bat</strong>, then open <strong>http://127.0.0.1:8787/leads.html</strong></p>
           </div>
         `;
@@ -1296,6 +1310,7 @@
     } else {
       switchView("dashboard");
     }
+    checkHealth();
   </script>
 </body>
 </html>
