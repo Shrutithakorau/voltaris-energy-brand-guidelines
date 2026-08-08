@@ -428,23 +428,56 @@ class Handler(SimpleHTTPRequestHandler):
             self._json(400, {"error": "Invalid JSON"})
             return
 
-        status = str(payload.get("status", "")).strip().lower()
-        if status not in STATUSES:
-            self._json(400, {"error": "Invalid status."})
-            return
-
-        final_status = normalize_status(status)
-        updated_at = utc_now()
-
         with get_conn() as conn:
-            cur = conn.execute(
-                "UPDATE leads SET status = ?, updated_at = ? WHERE id = ?",
-                (final_status, updated_at, lead_id),
-            )
-            conn.commit()
-            if cur.rowcount == 0:
+            existing = get_lead(conn, lead_id)
+            if not existing:
                 self._json(404, {"error": "Lead not found"})
                 return
+
+            current = row_to_lead(existing)
+
+            # Merge: allow status-only updates or full field updates
+            merged = {
+                "customerName": payload.get("customerName", current["customerName"]),
+                "mobile": payload.get("mobile", current["mobile"]),
+                "email": payload.get("email", current["email"]),
+                "address": payload.get("address", current["address"]),
+                "productType": payload.get("productType", current["productType"]),
+                "nmi": payload.get("nmi", current["nmi"]),
+                "phase": payload.get("phase", current["phase"]),
+                "status": payload.get("status", current["status"]),
+            }
+
+            data, err = validate_lead(merged)
+            if err:
+                self._json(400, {"error": err})
+                return
+
+            requested_status = str(payload.get("status", current["status"])).strip().lower()
+            final_status = data["status"]
+            updated_at = utc_now()
+
+            conn.execute(
+                """
+                UPDATE leads SET
+                    customer_name = ?, mobile = ?, email = ?, address = ?,
+                    product_type = ?, nmi = ?, phase = ?, status = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    data["customer_name"],
+                    data["mobile"],
+                    data["email"],
+                    data["address"],
+                    data["product_type"],
+                    data["nmi"],
+                    data["phase"],
+                    final_status,
+                    updated_at,
+                    lead_id,
+                ),
+            )
+            conn.commit()
             row = conn.execute(
                 "SELECT * FROM leads WHERE id = ?", (lead_id,)
             ).fetchone()
@@ -453,7 +486,7 @@ class Handler(SimpleHTTPRequestHandler):
             200,
             {
                 "lead": row_to_lead(row),
-                "movedToInstallation": status == "closed_won",
+                "movedToInstallation": requested_status == "closed_won",
                 "openedNotes": final_status in NOTE_STATUSES,
             },
         )

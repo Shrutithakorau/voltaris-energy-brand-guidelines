@@ -306,7 +306,7 @@
       <div class="page-header">
         <div>
           <h1 id="formTitle">Add new lead</h1>
-          <p>New records start as <strong>Lead</strong>. Move them through the pipeline on the dashboard.</p>
+          <p id="formSubtitle">New records start as <strong>Lead</strong>. Move them through the pipeline on the dashboard.</p>
         </div>
       </div>
 
@@ -356,10 +356,10 @@
           </div>
         </div>
         <div class="form-actions">
-          <p class="hint">Saved to SQLite with status: Lead</p>
+          <p class="hint" id="formHint">Saved to SQLite with status: Lead</p>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save lead</button>
+            <button type="submit" class="btn btn-primary" id="formSubmitBtn">Save lead</button>
           </div>
         </div>
       </form>
@@ -423,6 +423,8 @@
     let currentStatusFilter = "all";
     let allLeadsCache = [];
     let activeLeadId = null;
+    let editingLeadId = null;
+    let editingStatus = "lead";
 
     const form = document.getElementById("leadForm");
     const toast = document.getElementById("toast");
@@ -436,6 +438,10 @@
     const noteForm = document.getElementById("noteForm");
     const noteBody = document.getElementById("noteBody");
     const notesList = document.getElementById("notesList");
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+    const formHint = document.getElementById("formHint");
+    const formSubmitBtn = document.getElementById("formSubmitBtn");
 
     async function api(path, options = {}) {
       const res = await fetch(API_BASE + path, {
@@ -479,17 +485,69 @@
       history.replaceState(null, "", "#" + view);
     }
 
-    function goAddLead() {
+    function resetFormMode() {
+      editingLeadId = null;
+      editingStatus = "lead";
       form.reset();
       clearFieldErrors();
+      formTitle.textContent = "Add new lead";
+      formSubtitle.innerHTML = 'New records start as <strong>Lead</strong>. Move them through the pipeline on the dashboard.';
+      formHint.textContent = "Saved to SQLite with status: Lead";
+      formSubmitBtn.textContent = "Save lead";
+    }
+
+    function goAddLead() {
+      resetFormMode();
       switchView("form");
     }
 
-    document.getElementById("brandLink").addEventListener("click", () => switchView("dashboard"));
+    function fillForm(lead) {
+      form.customerName.value = lead.customerName || "";
+      form.mobile.value = lead.mobile || "";
+      form.email.value = lead.email || "";
+      form.address.value = lead.address || "";
+      form.nmi.value = lead.nmi || "";
+      const product = form.querySelector(`input[name="productType"][value="${lead.productType}"]`);
+      if (product) product.checked = true;
+      const phase = form.querySelector(`input[name="phase"][value="${lead.phase}"]`);
+      if (phase) phase.checked = true;
+    }
+
+    async function openLeadForm(leadId) {
+      try {
+        const data = await api("/api/leads/" + encodeURIComponent(leadId));
+        const lead = data.lead;
+        editingLeadId = lead.id;
+        editingStatus = lead.status || "lead";
+        clearFieldErrors();
+        fillForm(lead);
+        formTitle.textContent = "Edit " + (statusLabels[lead.status] || "record");
+        formSubtitle.innerHTML = `Editing <strong>${escapeHtml(lead.customerName)}</strong> · Status: <strong>${escapeHtml(statusLabels[lead.status] || lead.status)}</strong>`;
+        formHint.textContent = canAddNotes(lead.status)
+          ? "Update details here. Use Notes on the dashboard for comments."
+          : "Update details, then move this lead to Opportunity when ready.";
+        formSubmitBtn.textContent = "Save changes";
+        switchView("form");
+        form.customerName.focus();
+      } catch (err) {
+        showToast(err.message || "Could not open record.");
+      }
+    }
+
+    document.getElementById("brandLink").addEventListener("click", () => {
+      resetFormMode();
+      switchView("dashboard");
+    });
     document.getElementById("topAddBtn").addEventListener("click", goAddLead);
     document.getElementById("dashAddBtn").addEventListener("click", goAddLead);
-    document.getElementById("backToDash").addEventListener("click", () => switchView("dashboard"));
-    document.getElementById("cancelFormBtn").addEventListener("click", () => switchView("dashboard"));
+    document.getElementById("backToDash").addEventListener("click", () => {
+      resetFormMode();
+      switchView("dashboard");
+    });
+    document.getElementById("cancelFormBtn").addEventListener("click", () => {
+      resetFormMode();
+      switchView("dashboard");
+    });
     document.getElementById("closeSidebarBtn").addEventListener("click", closeSidebar);
     overlay.addEventListener("click", closeSidebar);
 
@@ -512,7 +570,7 @@
         productType: (form.querySelector('input[name="productType"]:checked') || {}).value || "",
         nmi: form.nmi.value.trim().toUpperCase(),
         phase: (form.querySelector('input[name="phase"]:checked') || {}).value || "",
-        status: "lead"
+        status: editingLeadId ? editingStatus : "lead"
       };
     }
 
@@ -536,19 +594,25 @@
         showToast("Please fix the highlighted fields.");
         return;
       }
-      const submitBtn = form.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
+      formSubmitBtn.disabled = true;
       try {
-        await api("/api/leads", { method: "POST", body: JSON.stringify(data) });
-        form.reset();
-        clearFieldErrors();
-        showToast("Lead saved to database.");
+        if (editingLeadId) {
+          await api("/api/leads/" + encodeURIComponent(editingLeadId), {
+            method: "PATCH",
+            body: JSON.stringify(data)
+          });
+          showToast("Changes saved.");
+        } else {
+          await api("/api/leads", { method: "POST", body: JSON.stringify(data) });
+          showToast("Lead saved to database.");
+        }
+        resetFormMode();
         switchView("dashboard");
       } catch (err) {
-        showToast(err.message || "Could not save lead.");
+        showToast(err.message || "Could not save.");
         await checkHealth();
       } finally {
-        submitBtn.disabled = false;
+        formSubmitBtn.disabled = false;
       }
     });
 
@@ -608,14 +672,8 @@
 
         const allowNotes = canAddNotes(lead.status);
         noteForm.style.display = allowNotes ? "block" : "none";
-        if (!allowNotes) {
-          notesList.insertAdjacentHTML("beforebegin", "");
-        }
-
         renderNotes(data.notes || []);
-        if (focusComposer && allowNotes) {
-          noteBody.focus();
-        }
+        if (focusComposer && allowNotes) noteBody.focus();
       } catch (err) {
         showToast(err.message || "Could not load notes.");
         closeSidebar();
@@ -695,11 +753,8 @@
           showToast("Status updated.");
         }
         await renderDashboard();
-        if (status === "opportunity" || res.openedNotes) {
-          // Open notes when moving into opportunity (or any note-enabled stage from closed_won path)
-          if (status === "opportunity") {
-            openNotesSidebar(id, { focusComposer: true });
-          }
+        if (status === "opportunity") {
+          openNotesSidebar(id, { focusComposer: true });
         }
       } catch (err) {
         showToast(err.message || "Could not update status.");
@@ -711,6 +766,7 @@
       try {
         await api("/api/leads/" + encodeURIComponent(id), { method: "DELETE" });
         if (activeLeadId === id) closeSidebar();
+        if (editingLeadId === id) resetFormMode();
         showToast("Lead deleted.");
         renderDashboard();
       } catch (err) {
@@ -789,9 +845,9 @@
               ${leads.map((l) => `
                 <tr>
                   <td class="name-cell">
-                    ${canAddNotes(l.status)
-                      ? `<button type="button" class="back-link" data-open-notes="${escapeAttr(l.id)}" style="margin:0;font-weight:700">${escapeHtml(l.customerName)}</button>`
-                      : escapeHtml(l.customerName)}
+                    <button type="button" class="back-link" data-open-form="${escapeAttr(l.id)}" style="margin:0;font-weight:700" title="Open filled form">
+                      ${escapeHtml(l.customerName)}
+                    </button>
                   </td>
                   <td><a href="tel:${escapeAttr(l.mobile)}">${escapeHtml(l.mobile)}</a></td>
                   <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
@@ -803,6 +859,7 @@
                   <td class="muted">${escapeHtml(formatDate(l.createdAt))}</td>
                   <td>
                     <div class="row-actions">
+                      <button type="button" class="btn btn-secondary" data-open-form="${escapeAttr(l.id)}" style="padding:8px 12px;font-size:12px">Open</button>
                       ${canAddNotes(l.status) ? `<button type="button" class="btn btn-notes" data-open-notes="${escapeAttr(l.id)}">Notes</button>` : ""}
                       <button type="button" class="btn btn-danger" data-delete="${escapeAttr(l.id)}">Delete</button>
                     </div>
@@ -815,6 +872,9 @@
 
         tableWrap.querySelectorAll("[data-status-id]").forEach((sel) => {
           sel.addEventListener("change", () => updateStatus(sel.getAttribute("data-status-id"), sel.value));
+        });
+        tableWrap.querySelectorAll("[data-open-form]").forEach((btn) => {
+          btn.addEventListener("click", () => openLeadForm(btn.getAttribute("data-open-form")));
         });
         tableWrap.querySelectorAll("[data-open-notes]").forEach((btn) => {
           btn.addEventListener("click", () => openNotesSidebar(btn.getAttribute("data-open-notes"), { focusComposer: true }));
@@ -847,7 +907,12 @@
     });
 
     const initial = (location.hash || "#dashboard").replace("#", "");
-    switchView(initial === "form" ? "form" : "dashboard");
+    if (initial === "form") {
+      resetFormMode();
+      switchView("form");
+    } else {
+      switchView("dashboard");
+    }
     checkHealth();
   </script>
 </body>
