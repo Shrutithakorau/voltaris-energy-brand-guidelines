@@ -211,6 +211,61 @@
       border: none; background: none; color: var(--navy); font: inherit; font-weight: 700;
       font-size: 14px; cursor: pointer; margin-bottom: 10px;
     }
+  
+    .row-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-notes {
+      background: #E8EEF8; color: var(--navy); padding: 8px 12px; font-size: 12px;
+    }
+    .btn-notes:hover { filter: brightness(0.97); }
+    .overlay {
+      position: fixed; inset: 0; background: rgba(17, 35, 75, 0.35);
+      opacity: 0; pointer-events: none; transition: 0.2s ease; z-index: 80;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .sidebar {
+      position: fixed; top: 0; right: 0; height: 100vh; width: min(420px, 100%);
+      background: var(--white); border-left: 1px solid var(--border);
+      box-shadow: -12px 0 40px rgba(17, 35, 75, 0.12);
+      transform: translateX(100%); transition: transform 0.25s ease;
+      z-index: 90; display: flex; flex-direction: column;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-header {
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    }
+    .sidebar-header h2 {
+      font-family: var(--font-serif); font-weight: 400; font-size: 1.45rem; line-height: 1.2;
+    }
+    .sidebar-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .icon-btn {
+      border: 1px solid var(--border); background: var(--cream); border-radius: 999px;
+      width: 36px; height: 36px; cursor: pointer; font-size: 18px; line-height: 1; color: var(--dark);
+    }
+    .sidebar-body { padding: 18px 20px; overflow: auto; flex: 1; }
+    .sidebar-card {
+      background: var(--cream); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; margin-bottom: 18px; font-size: 13px; color: var(--mid);
+    }
+    .sidebar-card strong { color: var(--dark); }
+    .note-form textarea, #noteForm textarea { min-height: 110px; margin-bottom: 10px; }
+    .notes-title {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); margin: 18px 0 10px;
+    }
+    .note-list { display: flex; flex-direction: column; gap: 10px; }
+    .note-item {
+      border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; background: #fff;
+    }
+    .note-item time {
+      display: block; font-size: 11px; font-weight: 700; color: var(--muted);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .note-item p {
+      font-size: 14px; color: var(--dark); white-space: pre-wrap; word-break: break-word; margin: 0;
+    }
+    .notes-empty { font-size: 14px; color: var(--muted); padding: 8px 0 16px; }
+
   </style>
 </head>
 <body>
@@ -311,6 +366,28 @@
     </section>
   </main>
 
+  
+  <div class="overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="notesSidebar" aria-hidden="true" aria-label="Opportunity notes">
+    <div class="sidebar-header">
+      <div>
+        <h2 id="sidebarName">Notes</h2>
+        <div class="sidebar-meta" id="sidebarMeta"></div>
+      </div>
+      <button type="button" class="icon-btn" id="closeSidebarBtn" aria-label="Close notes">×</button>
+    </div>
+    <div class="sidebar-body">
+      <div class="sidebar-card" id="sidebarSummary"></div>
+      <form id="noteForm">
+        <label for="noteBody" style="display:block;font-size:13px;font-weight:600;margin-bottom:7px;">Add note / comment</label>
+        <textarea id="noteBody" placeholder="Call notes, quote discussion, next steps…" required></textarea>
+        <button type="submit" class="btn btn-primary" id="saveNoteBtn">Add note</button>
+      </form>
+      <div class="notes-title">Notes history</div>
+      <div id="notesList" class="note-list"></div>
+    </div>
+  </aside>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -323,7 +400,6 @@
     };
     const phaseLabels = { single: "Single phase", three: "Three phase" };
 
-    // Selectable pipeline statuses. Closed won auto-advances to installation on the server.
     const statusOptions = [
       { value: "lead", label: "Lead" },
       { value: "opportunity", label: "Opportunity" },
@@ -332,8 +408,8 @@
       { value: "closed_lost", label: "Opportunity — Closed lost" },
       { value: "installation", label: "Installation" }
     ];
-
     const statusLabels = Object.fromEntries(statusOptions.map((s) => [s.value, s.label]));
+    const NOTE_STATUSES = new Set(["opportunity", "quoted", "closed_won", "closed_lost", "installation"]);
 
     const pipelineFilters = [
       { key: "all", label: "All" },
@@ -346,6 +422,7 @@
 
     let currentStatusFilter = "all";
     let allLeadsCache = [];
+    let activeLeadId = null;
 
     const form = document.getElementById("leadForm");
     const toast = document.getElementById("toast");
@@ -354,6 +431,11 @@
     const dbStatus = document.getElementById("dbStatus");
     const pipelineEl = document.getElementById("pipeline");
     const filterHint = document.getElementById("filterHint");
+    const sidebar = document.getElementById("notesSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    const noteForm = document.getElementById("noteForm");
+    const noteBody = document.getElementById("noteBody");
+    const notesList = document.getElementById("notesList");
 
     async function api(path, options = {}) {
       const res = await fetch(API_BASE + path, {
@@ -408,6 +490,8 @@
     document.getElementById("dashAddBtn").addEventListener("click", goAddLead);
     document.getElementById("backToDash").addEventListener("click", () => switchView("dashboard"));
     document.getElementById("cancelFormBtn").addEventListener("click", () => switchView("dashboard"));
+    document.getElementById("closeSidebarBtn").addEventListener("click", closeSidebar);
+    overlay.addEventListener("click", closeSidebar);
 
     function clearFieldErrors() {
       document.querySelectorAll(".field.invalid").forEach((el) => el.classList.remove("invalid"));
@@ -490,6 +574,90 @@
     }
     function escapeAttr(str) { return escapeHtml(str).replace(/'/g, "&#39;"); }
 
+    function canAddNotes(status) {
+      return NOTE_STATUSES.has(status);
+    }
+
+    function closeSidebar() {
+      activeLeadId = null;
+      sidebar.classList.remove("open");
+      overlay.classList.remove("open");
+      sidebar.setAttribute("aria-hidden", "true");
+      noteBody.value = "";
+    }
+
+    async function openNotesSidebar(leadId, { focusComposer = false } = {}) {
+      activeLeadId = leadId;
+      sidebar.classList.add("open");
+      overlay.classList.add("open");
+      sidebar.setAttribute("aria-hidden", "false");
+      notesList.innerHTML = '<div class="notes-empty">Loading notes…</div>';
+
+      try {
+        const data = await api("/api/leads/" + encodeURIComponent(leadId) + "/notes");
+        const lead = data.lead;
+        document.getElementById("sidebarName").textContent = lead.customerName;
+        document.getElementById("sidebarMeta").textContent =
+          (statusLabels[lead.status] || lead.status) + " · " + (productLabels[lead.productType] || "");
+        document.getElementById("sidebarSummary").innerHTML = `
+          <div><strong>Mobile:</strong> ${escapeHtml(lead.mobile)}</div>
+          <div><strong>Email:</strong> ${escapeHtml(lead.email)}</div>
+          <div><strong>Address:</strong> ${escapeHtml(lead.address)}</div>
+          <div style="margin-top:6px"><strong>NMI:</strong> ${escapeHtml(lead.nmi || "—")} · <strong>Phase:</strong> ${escapeHtml(phaseLabels[lead.phase] || lead.phase)}</div>
+        `;
+
+        const allowNotes = canAddNotes(lead.status);
+        noteForm.style.display = allowNotes ? "block" : "none";
+        if (!allowNotes) {
+          notesList.insertAdjacentHTML("beforebegin", "");
+        }
+
+        renderNotes(data.notes || []);
+        if (focusComposer && allowNotes) {
+          noteBody.focus();
+        }
+      } catch (err) {
+        showToast(err.message || "Could not load notes.");
+        closeSidebar();
+      }
+    }
+
+    function renderNotes(notes) {
+      if (!notes.length) {
+        notesList.innerHTML = '<div class="notes-empty">No notes yet. Add the first comment below.</div>';
+        return;
+      }
+      notesList.innerHTML = notes.map((n) => `
+        <article class="note-item">
+          <time datetime="${escapeAttr(n.createdAt)}">${escapeHtml(formatDate(n.createdAt))}</time>
+          <p>${escapeHtml(n.body)}</p>
+        </article>
+      `).join("");
+    }
+
+    noteForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!activeLeadId) return;
+      const body = noteBody.value.trim();
+      if (!body) return;
+      const btn = document.getElementById("saveNoteBtn");
+      btn.disabled = true;
+      try {
+        await api("/api/leads/" + encodeURIComponent(activeLeadId) + "/notes", {
+          method: "POST",
+          body: JSON.stringify({ body })
+        });
+        noteBody.value = "";
+        showToast("Note added.");
+        const data = await api("/api/leads/" + encodeURIComponent(activeLeadId) + "/notes");
+        renderNotes(data.notes || []);
+      } catch (err) {
+        showToast(err.message || "Could not save note.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
     function countByStatus(leads) {
       const counts = { all: leads.length, lead: 0, opportunity: 0, quoted: 0, closed_lost: 0, installation: 0 };
       leads.forEach((l) => {
@@ -505,7 +673,6 @@
           <span>${f.label}</span>
         </button>
       `).join("");
-
       pipelineEl.querySelectorAll("[data-filter]").forEach((btn) => {
         btn.addEventListener("click", () => {
           currentStatusFilter = btn.getAttribute("data-filter");
@@ -522,18 +689,28 @@
         });
         if (res.movedToInstallation) {
           showToast("Closed won — moved to Installation phase.");
+        } else if (status === "opportunity") {
+          showToast("Moved to Opportunity — add notes in the sidebar.");
         } else {
           showToast("Status updated.");
         }
-        renderDashboard();
+        await renderDashboard();
+        if (status === "opportunity" || res.openedNotes) {
+          // Open notes when moving into opportunity (or any note-enabled stage from closed_won path)
+          if (status === "opportunity") {
+            openNotesSidebar(id, { focusComposer: true });
+          }
+        }
       } catch (err) {
         showToast(err.message || "Could not update status.");
+        renderDashboard();
       }
     }
 
     async function deleteLead(id) {
       try {
         await api("/api/leads/" + encodeURIComponent(id), { method: "DELETE" });
+        if (activeLeadId === id) closeSidebar();
         showToast("Lead deleted.");
         renderDashboard();
       } catch (err) {
@@ -542,14 +719,12 @@
     }
 
     function statusSelectHtml(lead) {
-      const current = lead.status === "installation" ? "installation" : lead.status;
+      const current = lead.status;
       return `
         <select class="status-select ${escapeAttr(lead.status)}" data-status-id="${escapeAttr(lead.id)}" aria-label="Status for ${escapeAttr(lead.customerName)}">
-          ${statusOptions.map((s) => {
-            // If already in installation, keep installation selected; closed_won option still available to re-trigger logic
-            const selected = s.value === current || (lead.status === "installation" && s.value === "installation");
-            return `<option value="${s.value}" ${selected ? "selected" : ""}>${s.label}</option>`;
-          }).join("")}
+          ${statusOptions.map((s) => `
+            <option value="${s.value}" ${s.value === current ? "selected" : ""}>${s.label}</option>
+          `).join("")}
         </select>
       `;
     }
@@ -613,7 +788,11 @@
             <tbody>
               ${leads.map((l) => `
                 <tr>
-                  <td class="name-cell">${escapeHtml(l.customerName)}</td>
+                  <td class="name-cell">
+                    ${canAddNotes(l.status)
+                      ? `<button type="button" class="back-link" data-open-notes="${escapeAttr(l.id)}" style="margin:0;font-weight:700">${escapeHtml(l.customerName)}</button>`
+                      : escapeHtml(l.customerName)}
+                  </td>
                   <td><a href="tel:${escapeAttr(l.mobile)}">${escapeHtml(l.mobile)}</a></td>
                   <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
                   <td>${escapeHtml(l.address)}</td>
@@ -622,7 +801,12 @@
                   <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
                   <td>${statusSelectHtml(l)}</td>
                   <td class="muted">${escapeHtml(formatDate(l.createdAt))}</td>
-                  <td><button type="button" class="btn btn-danger" data-delete="${escapeAttr(l.id)}">Delete</button></td>
+                  <td>
+                    <div class="row-actions">
+                      ${canAddNotes(l.status) ? `<button type="button" class="btn btn-notes" data-open-notes="${escapeAttr(l.id)}">Notes</button>` : ""}
+                      <button type="button" class="btn btn-danger" data-delete="${escapeAttr(l.id)}">Delete</button>
+                    </div>
+                  </td>
                 </tr>
               `).join("")}
             </tbody>
@@ -631,6 +815,9 @@
 
         tableWrap.querySelectorAll("[data-status-id]").forEach((sel) => {
           sel.addEventListener("change", () => updateStatus(sel.getAttribute("data-status-id"), sel.value));
+        });
+        tableWrap.querySelectorAll("[data-open-notes]").forEach((btn) => {
+          btn.addEventListener("click", () => openNotesSidebar(btn.getAttribute("data-open-notes"), { focusComposer: true }));
         });
         tableWrap.querySelectorAll("[data-delete]").forEach((btn) => {
           btn.addEventListener("click", () => {
@@ -655,7 +842,10 @@
       searchTimer = setTimeout(renderDashboard, 200);
     });
 
-    // Always start on dashboard unless hash explicitly asks for form
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeSidebar();
+    });
+
     const initial = (location.hash || "#dashboard").replace("#", "");
     switchView(initial === "form" ? "form" : "dashboard");
     checkHealth();

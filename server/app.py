@@ -1,6 +1,6 @@
 ﻿"""
 Voltaris Energy Lead API + static file server.
-Stores leads in SQLite (data/leads.db).
+Stores leads and notes in SQLite (data/leads.db).
 """
 
 from __future__ import annotations
@@ -22,11 +22,16 @@ PORT = 8787
 
 PRODUCT_TYPES = {"solar", "battery", "solar-battery"}
 PHASES = {"single", "three"}
-# Pipeline:
-# lead -> opportunity -> quoted -> closed_won | closed_lost
-# closed_won -> installation
 STATUSES = {
     "lead",
+    "opportunity",
+    "quoted",
+    "closed_won",
+    "closed_lost",
+    "installation",
+}
+# Notes allowed once a record has progressed to opportunity or beyond
+NOTE_STATUSES = {
     "opportunity",
     "quoted",
     "closed_won",
@@ -73,17 +78,31 @@ def init_db() -> None:
             )
         if "updated_at" not in cols:
             conn.execute("ALTER TABLE leads ADD COLUMN updated_at TEXT")
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS notes (
+                id TEXT PRIMARY KEY,
+                lead_id TEXT NOT NULL,
+                body TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)"
         )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_notes_lead_id ON notes(lead_id, created_at DESC)"
+        )
         conn.commit()
 
 
 def normalize_status(status: str) -> str:
-    """Closed won advances to installation phase."""
     status = (status or "lead").strip().lower()
     if status == "closed_won":
         return "installation"
@@ -105,6 +124,19 @@ def row_to_lead(row: sqlite3.Row) -> dict:
         "createdAt": row["created_at"],
         "updatedAt": row["updated_at"] if "updated_at" in keys else None,
     }
+
+
+def row_to_note(row: sqlite3.Row) -> dict:
+    return {
+        "id": row["id"],
+        "leadId": row["lead_id"],
+        "body": row["body"],
+        "createdAt": row["created_at"],
+    }
+
+
+def get_lead(conn: sqlite3.Connection, lead_id: str) -> sqlite3.Row | None:
+    return conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
 
 
 def validate_lead(payload: dict) -> tuple[dict | None, str | None]:
@@ -183,11 +215,56 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/health":
+        path = parsed.path
+
+        if path == "/api/health":
             self._json(200, {"ok": True, "database": str(DB_PATH)})
             return
 
-        if parsed.path == "/api/leads":
+        # GET /api/leads/:id/notes
+        parts = path.strip("/").split("/")
+        if (
+            len(parts) == 4
+            and parts[0] == "api"
+            and parts[1] == "leads"
+            and parts[3] == "notes"
+        ):
+            lead_id = parts[2]
+            with get_conn() as conn:
+                lead = get_lead(conn, lead_id)
+                if not lead:
+                    self._json(404, {"error": "Lead not found"})
+                    return
+                rows = conn.execute(
+                    """
+                    SELECT * FROM notes
+                    WHERE lead_id = ?
+                    ORDER BY datetime(created_at) DESC
+                    """,
+                    (lead_id,),
+                ).fetchall()
+            self._json(
+                200,
+                {
+                    "lead": row_to_lead(lead),
+                    "notes": [row_to_note(r) for r in rows],
+                    "count": len(rows),
+                },
+            )
+            return
+
+        # GET /api/leads/:id
+        if len(parts) == 3 and parts[0] == "api" and parts[1] == "leads":
+            lead_id = parts[2]
+            with get_conn() as conn:
+                lead = get_lead(conn, lead_id)
+            if not lead:
+                self._json(404, {"error": "Lead not found"})
+                return
+            self._json(200, {"lead": row_to_lead(lead)})
+            return
+
+        if path == "/api/leads":
             qs = parse_qs(parsed.query)
             q = (qs.get("q") or [""])[0].strip().lower()
             status_filter = (qs.get("status") or [""])[0].strip().lower()
@@ -219,7 +296,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._json(200, {"leads": leads, "count": len(leads)})
             return
 
-        if parsed.path in ("/", "/leads", "/leads/"):
+        if path in ("/", "/leads", "/leads/"):
             self.path = "/leads.html"
             return super().do_GET()
 
@@ -227,7 +304,68 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path != "/api/leads":
+        path = parsed.path
+        parts = path.strip("/").split("/")
+
+        # POST /api/leads/:id/notes
+        if (
+            len(parts) == 4
+            and parts[0] == "api"
+            and parts[1] == "leads"
+            and parts[3] == "notes"
+        ):
+            lead_id = parts[2]
+            try:
+                payload = self._read_json()
+            except json.JSONDecodeError:
+                self._json(400, {"error": "Invalid JSON"})
+                return
+
+            body = str(payload.get("body", "")).strip()
+            if not body:
+                self._json(400, {"error": "Note text is required."})
+                return
+            if len(body) > 5000:
+                self._json(400, {"error": "Note is too long (max 5000 characters)."})
+                return
+
+            with get_conn() as conn:
+                lead = get_lead(conn, lead_id)
+                if not lead:
+                    self._json(404, {"error": "Lead not found"})
+                    return
+                status = lead["status"]
+                if status not in NOTE_STATUSES:
+                    self._json(
+                        400,
+                        {
+                            "error": "Move this record to Opportunity before adding notes."
+                        },
+                    )
+                    return
+
+                note_id = "note_" + uuid.uuid4().hex[:12]
+                created_at = utc_now()
+                conn.execute(
+                    """
+                    INSERT INTO notes (id, lead_id, body, created_at)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (note_id, lead_id, body, created_at),
+                )
+                conn.execute(
+                    "UPDATE leads SET updated_at = ? WHERE id = ?",
+                    (created_at, lead_id),
+                )
+                conn.commit()
+                row = conn.execute(
+                    "SELECT * FROM notes WHERE id = ?", (note_id,)
+                ).fetchone()
+
+            self._json(201, {"note": row_to_note(row)})
+            return
+
+        if path != "/api/leads":
             self._json(404, {"error": "Not found"})
             return
 
@@ -237,7 +375,6 @@ class Handler(SimpleHTTPRequestHandler):
             self._json(400, {"error": "Invalid JSON"})
             return
 
-        # Default new records to lead status
         if "status" not in payload:
             payload["status"] = "lead"
 
@@ -296,7 +433,6 @@ class Handler(SimpleHTTPRequestHandler):
             self._json(400, {"error": "Invalid status."})
             return
 
-        # Closed won moves into installation phase
         final_status = normalize_status(status)
         updated_at = utc_now()
 
@@ -318,6 +454,7 @@ class Handler(SimpleHTTPRequestHandler):
             {
                 "lead": row_to_lead(row),
                 "movedToInstallation": status == "closed_won",
+                "openedNotes": final_status in NOTE_STATUSES,
             },
         )
 
@@ -330,6 +467,7 @@ class Handler(SimpleHTTPRequestHandler):
 
         lead_id = parts[2]
         with get_conn() as conn:
+            conn.execute("DELETE FROM notes WHERE lead_id = ?", (lead_id,))
             cur = conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
             conn.commit()
             deleted = cur.rowcount
