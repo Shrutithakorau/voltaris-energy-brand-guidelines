@@ -16,14 +16,12 @@
       --cream-warm: #EFEDE6;
       --white: #FFFFFF;
       --dark: #1A1E1B;
-      --dark-2: #232820;
       --mid: #4A4F46;
       --muted: #757870;
       --border: #E2DDD4;
       --border-mid: #C8C3B8;
       --navy: #11234B;
       --navy-2: #102445;
-      --lime: #D4E84A;
       --danger: #B42318;
       --danger-bg: #FEF3F2;
       --font-serif: "DM Serif Display", serif;
@@ -31,9 +29,7 @@
       --shadow: 0 8px 32px rgba(26, 30, 27, 0.06);
       --radius: 20px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
     body {
       font-family: var(--font-sans);
       background: var(--cream);
@@ -41,441 +37,226 @@
       min-height: 100vh;
       line-height: 1.5;
     }
-
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 40;
+      position: sticky; top: 0; z-index: 40;
       background: rgba(255,255,255,0.92);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
     .topbar-inner {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+      max-width: 1180px; margin: 0 auto; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      color: var(--dark);
-    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--dark); cursor: pointer; }
     .brand-mark {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
+      width: 40px; height: 40px; border-radius: 12px;
       background: linear-gradient(135deg, var(--navy), var(--navy-2));
-      color: var(--cta);
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      font-size: 18px;
+      color: var(--cta); display: grid; place-items: center; font-weight: 700; font-size: 18px;
     }
     .brand strong { display: block; font-size: 15px; font-weight: 700; }
     .brand span { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
-
-    .tabs {
-      display: flex;
-      gap: 6px;
-      padding: 4px;
-      background: var(--cream);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-    }
-    .tab {
-      border: none;
-      background: transparent;
-      padding: 10px 18px;
-      border-radius: 999px;
-      font: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--mid);
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-    .tab:hover { color: var(--dark); }
-    .tab.active {
-      background: var(--white);
-      color: var(--dark);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
-
+    .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .db-status {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 7px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--cream);
-      color: var(--muted);
+      font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--cream); color: var(--muted);
     }
-    .db-status.ok {
-      background: #F0F8C8;
-      border-color: #C8DC30;
-      color: #3F4A12;
-    }
-    .db-status.bad {
-      background: #FEF3F2;
-      border-color: #FECACA;
-      color: #B42318;
-    }
-
-    .page {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 28px 20px 64px;
-    }
+    .db-status.ok { background: #F0F8C8; border-color: #C8DC30; color: #3F4A12; }
+    .db-status.bad { background: #FEF3F2; border-color: #FECACA; color: #B42318; }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
     .view { display: none; }
     .view.active { display: block; }
-
     .page-header {
-      margin-bottom: 22px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
     }
     .page-header h1 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(1.9rem, 3.5vw, 2.5rem);
-      letter-spacing: -0.02em;
-      line-height: 1.15;
-      margin-bottom: 8px;
+      font-family: var(--font-serif); font-weight: 400;
+      font-size: clamp(1.9rem, 3.5vw, 2.5rem); letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px;
     }
     .page-header p { color: var(--mid); max-width: 52ch; }
-
     .panel {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 28px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px;
     }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px 16px;
-    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
     @media (max-width: 720px) {
       .form-grid { grid-template-columns: 1fr; }
       .panel { padding: 20px; }
     }
     .field { display: flex; flex-direction: column; gap: 7px; }
     .field.full { grid-column: 1 / -1; }
-    label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--dark);
-    }
-    label .opt {
-      font-weight: 500;
-      color: var(--muted);
-    }
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    textarea,
-    select {
-      width: 100%;
-      border: 1px solid var(--border-mid);
-      background: var(--cream);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font: inherit;
-      font-size: 15px;
-      color: var(--dark);
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    label { font-size: 13px; font-weight: 600; color: var(--dark); }
+    label .opt { font-weight: 500; color: var(--muted); }
+    input[type="text"], input[type="email"], input[type="tel"], textarea, select {
+      width: 100%; border: 1px solid var(--border-mid); background: var(--cream);
+      border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 15px; color: var(--dark); outline: none;
     }
     textarea { min-height: 88px; resize: vertical; }
     input:focus, textarea:focus, select:focus {
-      border-color: var(--navy);
-      background: var(--white);
+      border-color: var(--navy); background: var(--white);
       box-shadow: 0 0 0 3px rgba(17, 35, 75, 0.12);
     }
-    .error-text {
-      display: none;
-      font-size: 12px;
-      color: var(--danger);
-      font-weight: 500;
-    }
-    .field.invalid input,
-    .field.invalid textarea,
-    .field.invalid .choice-grid {
-      border-color: #F04438;
-    }
+    .error-text { display: none; font-size: 12px; color: var(--danger); font-weight: 500; }
+    .field.invalid input, .field.invalid textarea, .field.invalid .choice-grid { border-color: #F04438; }
     .field.invalid .error-text { display: block; }
-
     .section-label {
-      grid-column: 1 / -1;
-      margin-top: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
+      grid-column: 1 / -1; margin-top: 6px; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
     }
-
-    .choice-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    @media (max-width: 640px) {
-      .choice-grid { grid-template-columns: 1fr; }
-    }
-    .choice {
-      position: relative;
-    }
-    .choice input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
+    .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .choice-grid { grid-template-columns: 1fr; } }
+    .choice { position: relative; }
+    .choice input { position: absolute; opacity: 0; pointer-events: none; }
     .choice span {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      min-height: 54px;
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border-mid);
-      background: var(--cream);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.15s ease;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      min-height: 54px; padding: 12px; border-radius: 14px; border: 1px solid var(--border-mid);
+      background: var(--cream); font-size: 14px; font-weight: 600; cursor: pointer;
     }
     .choice input:checked + span {
-      background: #FFF8DE;
-      border-color: var(--cta);
-      box-shadow: inset 0 0 0 1px var(--cta);
-      color: var(--dark);
+      background: #FFF8DE; border-color: var(--cta); box-shadow: inset 0 0 0 1px var(--cta);
     }
-    .choice span:hover {
-      border-color: var(--navy);
-    }
-
-    .phase-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    .phase-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .phase-row .choice span { justify-content: flex-start; gap: 10px; padding-left: 16px; }
     .phase-row .choice span::before {
-      content: "";
-      width: 18px;
-      height: 18px;
-      border-radius: 5px;
-      border: 2px solid var(--border-mid);
-      background: var(--white);
-      flex-shrink: 0;
+      content: ""; width: 18px; height: 18px; border-radius: 5px;
+      border: 2px solid var(--border-mid); background: var(--white); flex-shrink: 0;
     }
     .phase-row .choice input:checked + span::before {
-      border-color: var(--navy);
-      background: var(--navy);
-      box-shadow: inset 0 0 0 3px var(--white);
+      border-color: var(--navy); background: var(--navy); box-shadow: inset 0 0 0 3px var(--white);
     }
-
     .form-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);
     }
     .hint { font-size: 13px; color: var(--muted); }
-
     .btn {
-      appearance: none;
-      border: none;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-      font-size: 14px;
-      border-radius: 999px;
-      padding: 12px 22px;
-      transition: 0.2s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      appearance: none; border: none; cursor: pointer; font: inherit; font-weight: 700;
+      font-size: 14px; border-radius: 999px; padding: 12px 22px; transition: 0.2s ease;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
     }
     .btn-primary {
-      background: var(--cta);
-      color: var(--cta-text);
+      background: var(--cta); color: var(--cta-text);
       box-shadow: 0 8px 24px rgba(255, 199, 10, 0.35);
     }
-    .btn-primary:hover {
-      background: var(--cta-hover);
-      transform: translateY(-1px);
-    }
+    .btn-primary:hover { background: var(--cta-hover); transform: translateY(-1px); }
     .btn-secondary {
-      background: var(--white);
-      color: var(--dark);
-      border: 1px solid var(--border-mid);
+      background: var(--white); color: var(--dark); border: 1px solid var(--border-mid);
     }
     .btn-secondary:hover { background: var(--cream); }
     .btn-danger {
-      background: var(--danger-bg);
-      color: var(--danger);
-      padding: 8px 12px;
-      font-size: 12px;
+      background: var(--danger-bg); color: var(--danger); padding: 8px 12px; font-size: 12px;
     }
-    .btn-danger:hover { filter: brightness(0.97); }
-
     .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      background: var(--navy);
-      color: #fff;
-      padding: 14px 18px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 600;
+      position: fixed; right: 20px; bottom: 20px; background: var(--navy); color: #fff;
+      padding: 14px 18px; border-radius: 14px; font-size: 14px; font-weight: 600;
       box-shadow: 0 12px 40px rgba(17, 35, 75, 0.28);
-      transform: translateY(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: 0.25s ease;
-      z-index: 100;
+      transform: translateY(20px); opacity: 0; pointer-events: none; transition: 0.25s ease; z-index: 100;
     }
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .pipeline {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 18px;
     }
-
+    @media (max-width: 900px) { .pipeline { grid-template-columns: 1fr 1fr; } }
+    .pipe-step {
+      background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 14px; cursor: pointer; text-align: left;
+    }
+    .pipe-step.active { border-color: var(--cta); box-shadow: inset 0 0 0 1px var(--cta); background: #FFFDF3; }
+    .pipe-step b { display: block; font-size: 1.15rem; line-height: 1; margin-bottom: 4px; }
+    .pipe-step span { font-size: 12px; color: var(--muted); font-weight: 600; }
     .dash-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
     }
-    .stats {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .stat {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px 14px;
-      min-width: 110px;
-    }
-    .stat b {
-      display: block;
-      font-size: 1.25rem;
-      line-height: 1.1;
-      margin-bottom: 2px;
-    }
-    .stat span {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    .search {
-      min-width: min(280px, 100%);
-    }
-
+    .search { min-width: min(280px, 100%); }
     .table-wrap {
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--white);
-      box-shadow: var(--shadow);
+      overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--white); box-shadow: var(--shadow);
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 920px;
-    }
+    table { width: 100%; border-collapse: collapse; min-width: 1080px; }
     th, td {
-      text-align: left;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-      font-size: 14px;
+      text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--border);
+      vertical-align: top; font-size: 14px;
     }
     th {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      background: var(--cream);
-      position: sticky;
-      top: 0;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); background: var(--cream); position: sticky; top: 0;
     }
     tr:last-child td { border-bottom: none; }
     tbody tr:hover td { background: #FCFAF5; }
     .name-cell { font-weight: 700; }
     .muted { color: var(--muted); }
     .pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      background: var(--cream-warm);
-      color: var(--dark);
-      white-space: nowrap;
+      display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; background: var(--cream-warm); color: var(--dark); white-space: nowrap;
     }
     .pill.solar { background: #FFF4C8; }
     .pill.battery { background: #E8EEF8; color: var(--navy); }
     .pill.both { background: #F0F8C8; }
-
-    .empty {
-      padding: 48px 24px;
-      text-align: center;
-      color: var(--mid);
+    .status-select {
+      min-width: 170px; padding: 8px 10px; border-radius: 10px; font-size: 13px; font-weight: 600;
     }
+    .status-select.lead { background: #F3F4F6; }
+    .status-select.opportunity { background: #E8EEF8; }
+    .status-select.quoted { background: #FFF4C8; }
+    .status-select.closed_lost { background: #FEE4E2; }
+    .status-select.installation { background: #F0F8C8; }
+    .empty { padding: 48px 24px; text-align: center; color: var(--mid); }
     .empty h3 {
-      font-family: var(--font-serif);
-      font-size: 1.5rem;
-      color: var(--dark);
-      font-weight: 400;
-      margin-bottom: 8px;
+      font-family: var(--font-serif); font-size: 1.5rem; color: var(--dark);
+      font-weight: 400; margin-bottom: 8px;
     }
     .empty p { margin-bottom: 18px; }
+    .back-link {
+      border: none; background: none; color: var(--navy); font: inherit; font-weight: 700;
+      font-size: 14px; cursor: pointer; margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="#form" id="brandLink">
+      <div class="brand" id="brandLink">
         <div class="brand-mark" aria-hidden="true">V</div>
         <div>
           <strong>Voltaris Energy</strong>
           <span>Lead Manager</span>
         </div>
-      </a>
-      <div id="dbStatus" class="db-status">Checking database…</div>
-      <nav class="tabs" aria-label="Views">
-        <button type="button" class="tab active" data-view="form" id="tabForm">New lead</button>
-        <button type="button" class="tab" data-view="dashboard" id="tabDash">Dashboard</button>
-      </nav>
+      </div>
+      <div class="top-actions">
+        <div id="dbStatus" class="db-status">Checking database…</div>
+        <button type="button" class="btn btn-primary" id="topAddBtn">+ Add new lead</button>
+      </div>
     </div>
   </header>
 
   <main class="page">
-    <section class="view active" id="view-form" aria-labelledby="formTitle">
+    <section class="view active" id="view-dashboard" aria-labelledby="dashTitle">
       <div class="page-header">
-        <h1 id="formTitle">Create a lead</h1>
-        <p>Capture customer details for solar and battery opportunities. Saved leads appear on the dashboard instantly.</p>
+        <div>
+          <h1 id="dashTitle">Lead dashboard</h1>
+          <p>Track every customer from lead → opportunity → quote → close, then installation when won.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="dashAddBtn">+ Add new lead</button>
+      </div>
+
+      <div class="pipeline" id="pipeline"></div>
+
+      <div class="dash-toolbar">
+        <div class="hint" id="filterHint">Showing all records</div>
+        <input class="search" id="searchInput" type="search" placeholder="Search leads…" aria-label="Search leads" />
+      </div>
+
+      <div class="table-wrap" id="tableWrap"></div>
+    </section>
+
+    <section class="view" id="view-form" aria-labelledby="formTitle">
+      <button type="button" class="back-link" id="backToDash">← Back to dashboard</button>
+      <div class="page-header">
+        <div>
+          <h1 id="formTitle">Add new lead</h1>
+          <p>New records start as <strong>Lead</strong>. Move them through the pipeline on the dashboard.</p>
+        </div>
       </div>
 
       <form class="panel" id="leadForm" novalidate>
@@ -485,115 +266,98 @@
             <input id="customerName" name="customerName" type="text" autocomplete="name" required placeholder="e.g. Sarah Mitchell" />
             <div class="error-text">Enter the customer name.</div>
           </div>
-
           <div class="field" id="field-mobile">
             <label for="mobile">Mobile number</label>
             <input id="mobile" name="mobile" type="tel" autocomplete="tel" required placeholder="04xx xxx xxx" />
             <div class="error-text">Enter a valid Australian mobile number.</div>
           </div>
-
           <div class="field" id="field-email">
             <label for="email">Email address</label>
             <input id="email" name="email" type="email" autocomplete="email" required placeholder="name@email.com" />
             <div class="error-text">Enter a valid email address.</div>
           </div>
-
           <div class="field" id="field-nmi">
             <label for="nmi">NMI <span class="opt">(optional)</span></label>
             <input id="nmi" name="nmi" type="text" maxlength="11" placeholder="11-character NMI" />
             <div class="error-text">NMI should be up to 11 characters.</div>
           </div>
-
           <div class="field full" id="field-address">
             <label for="address">Address</label>
             <textarea id="address" name="address" required placeholder="Street, suburb, state, postcode"></textarea>
             <div class="error-text">Enter the supply address.</div>
           </div>
-
           <div class="section-label">Product type</div>
           <div class="field full" id="field-product">
             <div class="choice-grid" role="radiogroup" aria-label="Product type">
-              <label class="choice">
-                <input type="radio" name="productType" value="solar" required />
-                <span>Solar</span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="productType" value="battery" />
-                <span>Battery</span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="productType" value="solar-battery" />
-                <span>Solar and battery</span>
-              </label>
+              <label class="choice"><input type="radio" name="productType" value="solar" required /><span>Solar</span></label>
+              <label class="choice"><input type="radio" name="productType" value="battery" /><span>Battery</span></label>
+              <label class="choice"><input type="radio" name="productType" value="solar-battery" /><span>Solar and battery</span></label>
             </div>
             <div class="error-text">Select a product type.</div>
           </div>
-
           <div class="section-label">Supply phase</div>
           <div class="field full" id="field-phase">
             <div class="phase-row" role="radiogroup" aria-label="Phase">
-              <label class="choice">
-                <input type="radio" name="phase" value="single" required />
-                <span>Single phase</span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="phase" value="three" />
-                <span>Three phase</span>
-              </label>
+              <label class="choice"><input type="radio" name="phase" value="single" required /><span>Single phase</span></label>
+              <label class="choice"><input type="radio" name="phase" value="three" /><span>Three phase</span></label>
             </div>
             <div class="error-text">Select single phase or three phase.</div>
           </div>
         </div>
-
         <div class="form-actions">
-          <p class="hint">Leads are saved to the SQLite database on the server.</p>
+          <p class="hint">Saved to SQLite with status: Lead</p>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button type="reset" class="btn btn-secondary" id="resetBtn">Clear</button>
-            <button type="submit" class="btn btn-primary">Add lead</button>
+            <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save lead</button>
           </div>
         </div>
       </form>
-    </section>
-
-    <section class="view" id="view-dashboard" aria-labelledby="dashTitle">
-      <div class="page-header">
-        <h1 id="dashTitle">Lead dashboard</h1>
-        <p>All captured leads in one place. Search by name, mobile, email, address, or NMI.</p>
-      </div>
-
-      <div class="dash-toolbar">
-        <div class="stats" id="stats"></div>
-        <input class="search" id="searchInput" type="search" placeholder="Search leads…" aria-label="Search leads" />
-      </div>
-
-      <div class="table-wrap" id="tableWrap"></div>
     </section>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const API_BASE = window.location.protocol.startsWith("http")
-      ? ""
-      : "http://127.0.0.1:8787";
+    const API_BASE = window.location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8787";
 
     const productLabels = {
       solar: "Solar",
       battery: "Battery",
       "solar-battery": "Solar and battery"
     };
+    const phaseLabels = { single: "Single phase", three: "Three phase" };
 
-    const phaseLabels = {
-      single: "Single phase",
-      three: "Three phase"
-    };
+    // Selectable pipeline statuses. Closed won auto-advances to installation on the server.
+    const statusOptions = [
+      { value: "lead", label: "Lead" },
+      { value: "opportunity", label: "Opportunity" },
+      { value: "quoted", label: "Opportunity — Quoted" },
+      { value: "closed_won", label: "Opportunity — Closed won" },
+      { value: "closed_lost", label: "Opportunity — Closed lost" },
+      { value: "installation", label: "Installation" }
+    ];
+
+    const statusLabels = Object.fromEntries(statusOptions.map((s) => [s.value, s.label]));
+
+    const pipelineFilters = [
+      { key: "all", label: "All" },
+      { key: "lead", label: "Lead" },
+      { key: "opportunity", label: "Opportunity" },
+      { key: "quoted", label: "Quoted" },
+      { key: "closed_lost", label: "Closed lost" },
+      { key: "installation", label: "Installation" }
+    ];
+
+    let currentStatusFilter = "all";
+    let allLeadsCache = [];
 
     const form = document.getElementById("leadForm");
     const toast = document.getElementById("toast");
     const tableWrap = document.getElementById("tableWrap");
-    const statsEl = document.getElementById("stats");
     const searchInput = document.getElementById("searchInput");
     const dbStatus = document.getElementById("dbStatus");
+    const pipelineEl = document.getElementById("pipeline");
+    const filterHint = document.getElementById("filterHint");
 
     async function api(path, options = {}) {
       const res = await fetch(API_BASE + path, {
@@ -602,10 +366,7 @@
       });
       let data = null;
       try { data = await res.json(); } catch { data = null; }
-      if (!res.ok) {
-        const msg = (data && data.error) || ("Request failed (" + res.status + ")");
-        throw new Error(msg);
-      }
+      if (!res.ok) throw new Error((data && data.error) || ("Request failed (" + res.status + ")"));
       return data;
     }
 
@@ -617,7 +378,6 @@
     }
 
     function setDbStatus(ok, detail) {
-      if (!dbStatus) return;
       dbStatus.textContent = ok ? "Database connected" : (detail || "Database offline");
       dbStatus.className = "db-status " + (ok ? "ok" : "bad");
     }
@@ -637,49 +397,42 @@
       document.querySelectorAll(".view").forEach((el) => {
         el.classList.toggle("active", el.id === "view-" + view);
       });
-      document.querySelectorAll(".tab").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.view === view);
-      });
       if (view === "dashboard") renderDashboard();
       history.replaceState(null, "", "#" + view);
     }
 
-    document.querySelectorAll(".tab").forEach((btn) => {
-      btn.addEventListener("click", () => switchView(btn.dataset.view));
-    });
-    document.getElementById("brandLink").addEventListener("click", (e) => {
-      e.preventDefault();
+    function goAddLead() {
+      form.reset();
+      clearFieldErrors();
       switchView("form");
-    });
+    }
+
+    document.getElementById("brandLink").addEventListener("click", () => switchView("dashboard"));
+    document.getElementById("topAddBtn").addEventListener("click", goAddLead);
+    document.getElementById("dashAddBtn").addEventListener("click", goAddLead);
+    document.getElementById("backToDash").addEventListener("click", () => switchView("dashboard"));
+    document.getElementById("cancelFormBtn").addEventListener("click", () => switchView("dashboard"));
 
     function clearFieldErrors() {
       document.querySelectorAll(".field.invalid").forEach((el) => el.classList.remove("invalid"));
     }
-
-    function setInvalid(id) {
-      document.getElementById(id).classList.add("invalid");
-    }
-
-    function isValidEmail(value) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    }
-
+    function setInvalid(id) { document.getElementById(id).classList.add("invalid"); }
+    function isValidEmail(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
     function isValidMobile(value) {
       const digits = value.replace(/\D/g, "");
       return /^(04\d{8}|614\d{8})$/.test(digits) || (digits.length >= 8 && digits.length <= 12);
     }
 
     function getFormData() {
-      const productType = (form.querySelector('input[name="productType"]:checked') || {}).value || "";
-      const phase = (form.querySelector('input[name="phase"]:checked') || {}).value || "";
       return {
         customerName: form.customerName.value.trim(),
         mobile: form.mobile.value.trim(),
         email: form.email.value.trim(),
         address: form.address.value.trim(),
-        productType,
+        productType: (form.querySelector('input[name="productType"]:checked') || {}).value || "",
         nmi: form.nmi.value.trim().toUpperCase(),
-        phase
+        phase: (form.querySelector('input[name="phase"]:checked') || {}).value || "",
+        status: "lead"
       };
     }
 
@@ -703,7 +456,6 @@
         showToast("Please fix the highlighted fields.");
         return;
       }
-
       const submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
       try {
@@ -720,22 +472,13 @@
       }
     });
 
-    form.addEventListener("reset", () => {
-      setTimeout(clearFieldErrors, 0);
-    });
-
     function formatDate(iso) {
       try {
         return new Intl.DateTimeFormat("en-AU", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit"
         }).format(new Date(iso));
-      } catch {
-        return iso;
-      }
+      } catch { return iso; }
     }
 
     function productClass(type) {
@@ -744,14 +487,75 @@
       return "both";
     }
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function escapeAttr(str) { return escapeHtml(str).replace(/'/g, "&#39;"); }
+
+    function countByStatus(leads) {
+      const counts = { all: leads.length, lead: 0, opportunity: 0, quoted: 0, closed_lost: 0, installation: 0 };
+      leads.forEach((l) => {
+        if (counts[l.status] !== undefined) counts[l.status] += 1;
+      });
+      return counts;
+    }
+
+    function renderPipeline(counts) {
+      pipelineEl.innerHTML = pipelineFilters.map((f) => `
+        <button type="button" class="pipe-step ${currentStatusFilter === f.key ? "active" : ""}" data-filter="${f.key}">
+          <b>${counts[f.key] || 0}</b>
+          <span>${f.label}</span>
+        </button>
+      `).join("");
+
+      pipelineEl.querySelectorAll("[data-filter]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          currentStatusFilter = btn.getAttribute("data-filter");
+          renderDashboard();
+        });
+      });
+    }
+
+    async function updateStatus(id, status) {
+      try {
+        const res = await api("/api/leads/" + encodeURIComponent(id), {
+          method: "PATCH",
+          body: JSON.stringify({ status })
+        });
+        if (res.movedToInstallation) {
+          showToast("Closed won — moved to Installation phase.");
+        } else {
+          showToast("Status updated.");
+        }
+        renderDashboard();
+      } catch (err) {
+        showToast(err.message || "Could not update status.");
+      }
+    }
+
     async function deleteLead(id) {
       try {
         await api("/api/leads/" + encodeURIComponent(id), { method: "DELETE" });
-        showToast("Lead deleted from database.");
+        showToast("Lead deleted.");
         renderDashboard();
       } catch (err) {
         showToast(err.message || "Could not delete lead.");
       }
+    }
+
+    function statusSelectHtml(lead) {
+      const current = lead.status === "installation" ? "installation" : lead.status;
+      return `
+        <select class="status-select ${escapeAttr(lead.status)}" data-status-id="${escapeAttr(lead.id)}" aria-label="Status for ${escapeAttr(lead.customerName)}">
+          ${statusOptions.map((s) => {
+            // If already in installation, keep installation selected; closed_won option still available to re-trigger logic
+            const selected = s.value === current || (lead.status === "installation" && s.value === "installation");
+            return `<option value="${s.value}" ${selected ? "selected" : ""}>${s.label}</option>`;
+          }).join("")}
+        </select>
+      `;
     }
 
     async function renderDashboard() {
@@ -759,40 +563,38 @@
       tableWrap.innerHTML = '<div class="empty"><p>Loading leads from database…</p></div>';
 
       try {
-        const path = query
-          ? "/api/leads?q=" + encodeURIComponent(query)
-          : "/api/leads";
-        const data = await api(path);
+        const data = await api("/api/leads");
         setDbStatus(true);
-        const leads = data.leads || [];
+        allLeadsCache = data.leads || [];
+        const counts = countByStatus(allLeadsCache);
+        renderPipeline(counts);
 
-        const allData = query ? await api("/api/leads") : data;
-        const allLeads = allData.leads || [];
+        let leads = allLeadsCache.slice();
+        if (currentStatusFilter !== "all") {
+          leads = leads.filter((l) => l.status === currentStatusFilter);
+        }
+        if (query) {
+          const q = query.toLowerCase();
+          leads = leads.filter((l) =>
+            [l.customerName, l.mobile, l.email, l.address, l.nmi, productLabels[l.productType], phaseLabels[l.phase], statusLabels[l.status]]
+              .join(" ").toLowerCase().includes(q)
+          );
+        }
 
-        const counts = {
-          total: allLeads.length,
-          solar: allLeads.filter((l) => l.productType === "solar").length,
-          battery: allLeads.filter((l) => l.productType === "battery").length,
-          both: allLeads.filter((l) => l.productType === "solar-battery").length
-        };
-
-        statsEl.innerHTML = `
-          <div class="stat"><b>${counts.total}</b><span>Total leads</span></div>
-          <div class="stat"><b>${counts.solar}</b><span>Solar</span></div>
-          <div class="stat"><b>${counts.battery}</b><span>Battery</span></div>
-          <div class="stat"><b>${counts.both}</b><span>Solar + battery</span></div>
-        `;
+        filterHint.textContent = currentStatusFilter === "all"
+          ? `Showing all records (${leads.length})`
+          : `Showing ${statusLabels[currentStatusFilter] || currentStatusFilter} (${leads.length})`;
 
         if (!leads.length) {
           tableWrap.innerHTML = `
             <div class="empty">
-              <h3>${allLeads.length ? "No matching leads" : "No leads yet"}</h3>
-              <p>${allLeads.length ? "Try a different search." : "Create your first lead to save it in the database."}</p>
-              ${!allLeads.length ? '<button type="button" class="btn btn-primary" id="emptyCta">Create a lead</button>' : ""}
+              <h3>${allLeadsCache.length ? "No matching records" : "No leads yet"}</h3>
+              <p>${allLeadsCache.length ? "Try another filter or search." : "Add your first lead to get started."}</p>
+              ${!allLeadsCache.length ? '<button type="button" class="btn btn-primary" id="emptyCta">+ Add new lead</button>' : ""}
             </div>
           `;
           const emptyCta = document.getElementById("emptyCta");
-          if (emptyCta) emptyCta.addEventListener("click", () => switchView("form"));
+          if (emptyCta) emptyCta.addEventListener("click", goAddLead);
           return;
         }
 
@@ -807,6 +609,7 @@
                 <th>Product</th>
                 <th>NMI</th>
                 <th>Phase</th>
+                <th>Status</th>
                 <th>Added</th>
                 <th></th>
               </tr>
@@ -821,6 +624,7 @@
                   <td><span class="pill ${productClass(l.productType)}">${escapeHtml(productLabels[l.productType] || l.productType)}</span></td>
                   <td class="muted">${escapeHtml(l.nmi || "—")}</td>
                   <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
+                  <td>${statusSelectHtml(l)}</td>
                   <td class="muted">${escapeHtml(formatDate(l.createdAt))}</td>
                   <td><button type="button" class="btn btn-danger" data-delete="${escapeAttr(l.id)}">Delete</button></td>
                 </tr>
@@ -829,34 +633,24 @@
           </table>
         `;
 
+        tableWrap.querySelectorAll("[data-status-id]").forEach((sel) => {
+          sel.addEventListener("change", () => updateStatus(sel.getAttribute("data-status-id"), sel.value));
+        });
         tableWrap.querySelectorAll("[data-delete]").forEach((btn) => {
           btn.addEventListener("click", () => {
-            if (confirm("Delete this lead from the database?")) {
-              deleteLead(btn.getAttribute("data-delete"));
-            }
+            if (confirm("Delete this lead from the database?")) deleteLead(btn.getAttribute("data-delete"));
           });
         });
       } catch (err) {
         setDbStatus(false, "Start the server (start-leads.bat)");
-        statsEl.innerHTML = "";
+        pipelineEl.innerHTML = "";
         tableWrap.innerHTML = `
           <div class="empty">
             <h3>Database not connected</h3>
-            <p>Run <strong>start-leads.bat</strong> in the project folder, then open <strong>http://127.0.0.1:8787/leads.html</strong></p>
+            <p>Run <strong>start-leads.bat</strong>, then open <strong>http://127.0.0.1:8787/leads.html</strong></p>
           </div>
         `;
       }
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-    function escapeAttr(str) {
-      return escapeHtml(str).replace(/'/g, "&#39;");
     }
 
     let searchTimer;
@@ -865,8 +659,9 @@
       searchTimer = setTimeout(renderDashboard, 200);
     });
 
-    const initial = (location.hash || "#form").replace("#", "");
-    switchView(initial === "dashboard" ? "dashboard" : "form");
+    // Always start on dashboard unless hash explicitly asks for form
+    const initial = (location.hash || "#dashboard").replace("#", "");
+    switchView(initial === "form" ? "form" : "dashboard");
     checkHealth();
   </script>
 </body>

@@ -22,6 +22,17 @@ PORT = 8787
 
 PRODUCT_TYPES = {"solar", "battery", "solar-battery"}
 PHASES = {"single", "three"}
+# Pipeline:
+# lead -> opportunity -> quoted -> closed_won | closed_lost
+# closed_won -> installation
+STATUSES = {
+    "lead",
+    "opportunity",
+    "quoted",
+    "closed_won",
+    "closed_lost",
+    "installation",
+}
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
@@ -49,17 +60,38 @@ def init_db() -> None:
                 product_type TEXT NOT NULL,
                 nmi TEXT,
                 phase TEXT NOT NULL,
-                created_at TEXT NOT NULL
+                status TEXT NOT NULL DEFAULT 'lead',
+                created_at TEXT NOT NULL,
+                updated_at TEXT
             )
             """
         )
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(leads)").fetchall()}
+        if "status" not in cols:
+            conn.execute(
+                "ALTER TABLE leads ADD COLUMN status TEXT NOT NULL DEFAULT 'lead'"
+            )
+        if "updated_at" not in cols:
+            conn.execute("ALTER TABLE leads ADD COLUMN updated_at TEXT")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)"
         )
         conn.commit()
 
 
+def normalize_status(status: str) -> str:
+    """Closed won advances to installation phase."""
+    status = (status or "lead").strip().lower()
+    if status == "closed_won":
+        return "installation"
+    return status
+
+
 def row_to_lead(row: sqlite3.Row) -> dict:
+    keys = row.keys()
     return {
         "id": row["id"],
         "customerName": row["customer_name"],
@@ -69,7 +101,9 @@ def row_to_lead(row: sqlite3.Row) -> dict:
         "productType": row["product_type"],
         "nmi": row["nmi"] or "",
         "phase": row["phase"],
+        "status": row["status"] if "status" in keys else "lead",
         "createdAt": row["created_at"],
+        "updatedAt": row["updated_at"] if "updated_at" in keys else None,
     }
 
 
@@ -84,6 +118,7 @@ def validate_lead(payload: dict) -> tuple[dict | None, str | None]:
     product_type = str(payload.get("productType", "")).strip()
     nmi = str(payload.get("nmi", "")).strip().upper()
     phase = str(payload.get("phase", "")).strip()
+    status = str(payload.get("status", "lead")).strip().lower() or "lead"
 
     if not customer_name:
         return None, "Customer name is required."
@@ -99,6 +134,10 @@ def validate_lead(payload: dict) -> tuple[dict | None, str | None]:
         return None, "Phase must be single or three."
     if nmi and (len(nmi) > 11 or not re.match(r"^[A-Z0-9]+$", nmi)):
         return None, "NMI must be up to 11 letters/numbers."
+    if status not in STATUSES:
+        return None, "Invalid status."
+
+    status = normalize_status(status)
 
     return {
         "customer_name": customer_name,
@@ -108,6 +147,7 @@ def validate_lead(payload: dict) -> tuple[dict | None, str | None]:
         "product_type": product_type,
         "nmi": nmi or None,
         "phase": phase,
+        "status": status,
     }, None
 
 
@@ -117,7 +157,9 @@ class Handler(SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header(
+            "Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS"
+        )
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
@@ -146,12 +188,16 @@ class Handler(SimpleHTTPRequestHandler):
             return
 
         if parsed.path == "/api/leads":
-            q = (parse_qs(parsed.query).get("q") or [""])[0].strip().lower()
+            qs = parse_qs(parsed.query)
+            q = (qs.get("q") or [""])[0].strip().lower()
+            status_filter = (qs.get("status") or [""])[0].strip().lower()
             with get_conn() as conn:
                 rows = conn.execute(
                     "SELECT * FROM leads ORDER BY datetime(created_at) DESC"
                 ).fetchall()
             leads = [row_to_lead(r) for r in rows]
+            if status_filter and status_filter != "all":
+                leads = [l for l in leads if l["status"] == status_filter]
             if q:
                 leads = [
                     l
@@ -166,6 +212,7 @@ class Handler(SimpleHTTPRequestHandler):
                             l["nmi"],
                             l["productType"],
                             l["phase"],
+                            l["status"],
                         ]
                     ).lower()
                 ]
@@ -190,6 +237,10 @@ class Handler(SimpleHTTPRequestHandler):
             self._json(400, {"error": "Invalid JSON"})
             return
 
+        # Default new records to lead status
+        if "status" not in payload:
+            payload["status"] = "lead"
+
         data, err = validate_lead(payload)
         if err:
             self._json(400, {"error": err})
@@ -202,8 +253,8 @@ class Handler(SimpleHTTPRequestHandler):
                 """
                 INSERT INTO leads (
                     id, customer_name, mobile, email, address,
-                    product_type, nmi, phase, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    product_type, nmi, phase, status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     lead_id,
@@ -214,6 +265,8 @@ class Handler(SimpleHTTPRequestHandler):
                     data["product_type"],
                     data["nmi"],
                     data["phase"],
+                    data["status"],
+                    created_at,
                     created_at,
                 ),
             )
@@ -223,6 +276,50 @@ class Handler(SimpleHTTPRequestHandler):
             ).fetchone()
 
         self._json(201, {"lead": row_to_lead(row)})
+
+    def do_PATCH(self):
+        parsed = urlparse(self.path)
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) != 3 or parts[0] != "api" or parts[1] != "leads":
+            self._json(404, {"error": "Not found"})
+            return
+
+        lead_id = parts[2]
+        try:
+            payload = self._read_json()
+        except json.JSONDecodeError:
+            self._json(400, {"error": "Invalid JSON"})
+            return
+
+        status = str(payload.get("status", "")).strip().lower()
+        if status not in STATUSES:
+            self._json(400, {"error": "Invalid status."})
+            return
+
+        # Closed won moves into installation phase
+        final_status = normalize_status(status)
+        updated_at = utc_now()
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                "UPDATE leads SET status = ?, updated_at = ? WHERE id = ?",
+                (final_status, updated_at, lead_id),
+            )
+            conn.commit()
+            if cur.rowcount == 0:
+                self._json(404, {"error": "Lead not found"})
+                return
+            row = conn.execute(
+                "SELECT * FROM leads WHERE id = ?", (lead_id,)
+            ).fetchone()
+
+        self._json(
+            200,
+            {
+                "lead": row_to_lead(row),
+                "movedToInstallation": status == "closed_won",
+            },
+        )
 
     def do_DELETE(self):
         parsed = urlparse(self.path)
