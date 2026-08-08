@@ -20,3 +20,8 @@ Brand system documentation derived from [voltarisenergy.com.au](https://www.volt
 
 Open `Voltaris-Energy-Brand-Guidelines.html` in any browser.
 
+## Lead Manager
+
+**Live app:** https://shrutithakorau.github.io/voltaris-energy-brand-guidelines/leads.html
+
+Create leads (name, mobile, email, address, product type, optional NMI, single/three phase) and view them on the dashboard. Data is stored in the browser (localStorage).
