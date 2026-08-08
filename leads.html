@@ -398,19 +398,12 @@
               <div class="section-label" style="margin:0 0 6px">Pipeline status</div>
               <span class="status-badge" id="formStatusBadge">Lead</span>
             </div>
-            <button type="button" class="btn btn-primary" id="convertOpportunityBtn" hidden>+ Convert to Opportunity</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary" id="convertOpportunityBtn" hidden>+ Convert to Opportunity</button>
+              <button type="button" class="btn btn-notes" id="openFormNotesBtn" hidden>Open notes</button>
+            </div>
           </div>
-          <p class="hint" id="statusHelp">Save the lead first, then convert it to Opportunity to add notes.</p>
-        </div>
-
-        <div class="form-notes" id="formNotesPanel">
-          <h3>Opportunity notes</h3>
-          <p class="help">Add comments while this record is an opportunity (or later stage). History appears below.</p>
-          <label for="formNoteBody" style="display:block;font-size:13px;font-weight:600;margin-bottom:7px;">Add note / comment</label>
-          <textarea id="formNoteBody" placeholder="Call notes, quote discussion, next steps…"></textarea>
-          <button type="button" class="btn btn-primary" id="formAddNoteBtn">Add note</button>
-          <div class="notes-title">Notes history</div>
-          <div id="formNotesList" class="note-list"></div>
+          <p class="hint" id="statusHelp">Save the lead first, then convert it to Opportunity to add notes in the sidebar.</p>
         </div>
 
         <div class="form-actions">
@@ -552,8 +545,6 @@
       formSubtitle.innerHTML = 'New records start as <strong>Lead</strong>. Move them through the pipeline on the dashboard.';
       formHint.textContent = "Saved to SQLite with status: Lead";
       formSubmitBtn.textContent = "Save lead";
-      formNoteBody.value = "";
-      formNotesList.innerHTML = "";
       updateFormStatusUI("lead");
     }
 
@@ -589,11 +580,6 @@
           : "Update details, then move this lead to Opportunity when ready.";
         formSubmitBtn.textContent = "Save changes";
         updateFormStatusUI(lead.status);
-        if (canAddNotes(lead.status)) {
-          await loadFormNotes(lead.id);
-        } else {
-          formNotesList.innerHTML = "";
-        }
         switchView("form");
         form.customerName.focus();
       } catch (err) {
@@ -663,7 +649,6 @@
       if (editingStatus !== "lead") return;
       convertOpportunityBtn.disabled = true;
       try {
-        // Save current field values, then move to opportunity
         const data = getFormData();
         if (!validate(data)) {
           showToast("Please fix the highlighted fields before converting.");
@@ -678,10 +663,9 @@
         updateFormStatusUI(editingStatus);
         formTitle.textContent = "Edit " + (statusLabels[editingStatus] || "record");
         formSubtitle.innerHTML = `Editing <strong>${escapeHtml(res.lead.customerName)}</strong> · Status: <strong>${escapeHtml(statusLabels[editingStatus] || editingStatus)}</strong>`;
-        formHint.textContent = "Opportunity unlocked — add notes below.";
-        await loadFormNotes(editingLeadId);
-        showToast("Converted to Opportunity. You can add notes now.");
-        formNoteBody.focus();
+        formHint.textContent = "Opportunity unlocked — notes open in the sidebar.";
+        showToast("Converted to Opportunity. Notes opened in sidebar.");
+        openNotesSidebar(editingLeadId, { focusComposer: true });
       } catch (err) {
         showToast(err.message || "Could not convert to opportunity.");
       } finally {
@@ -689,30 +673,12 @@
       }
     });
 
-    formAddNoteBtn.addEventListener("click", async () => {
+    openFormNotesBtn.addEventListener("click", () => {
       if (!editingLeadId || !canAddNotes(editingStatus)) {
         showToast("Convert to Opportunity before adding notes.");
         return;
       }
-      const body = formNoteBody.value.trim();
-      if (!body) {
-        showToast("Enter a note first.");
-        return;
-      }
-      formAddNoteBtn.disabled = true;
-      try {
-        await api("/api/leads/" + encodeURIComponent(editingLeadId) + "/notes", {
-          method: "POST",
-          body: JSON.stringify({ body })
-        });
-        formNoteBody.value = "";
-        await loadFormNotes(editingLeadId);
-        showToast("Note added.");
-      } catch (err) {
-        showToast(err.message || "Could not save note.");
-      } finally {
-        formAddNoteBtn.disabled = false;
-      }
+      openNotesSidebar(editingLeadId, { focusComposer: true });
     });
 
     form.addEventListener("submit", async (e) => {
@@ -777,33 +743,13 @@
       const isEditing = Boolean(editingLeadId);
       const isLead = (status || "lead") === "lead";
       convertOpportunityBtn.hidden = !(isEditing && isLead);
-      formNotesPanel.classList.toggle("visible", isEditing && canAddNotes(status));
+      openFormNotesBtn.hidden = !(isEditing && canAddNotes(status));
       if (!isEditing) {
-        statusHelp.textContent = "Save the lead first, then convert it to Opportunity to add notes.";
+        statusHelp.textContent = "Save the lead first, then convert it to Opportunity to add notes in the sidebar.";
       } else if (isLead) {
-        statusHelp.textContent = "Ready to progress? Convert this lead to Opportunity to unlock notes.";
+        statusHelp.textContent = "Ready to progress? Convert this lead to Opportunity — notes open in the sidebar.";
       } else {
-        statusHelp.textContent = "This record is in the opportunity pipeline. Add notes below.";
-      }
-    }
-
-    async function loadFormNotes(leadId) {
-      formNotesList.innerHTML = '<div class="notes-empty">Loading notes…</div>';
-      try {
-        const data = await api("/api/leads/" + encodeURIComponent(leadId) + "/notes");
-        const notes = data.notes || [];
-        if (!notes.length) {
-          formNotesList.innerHTML = '<div class="notes-empty">No notes yet. Add the first comment above.</div>';
-          return;
-        }
-        formNotesList.innerHTML = notes.map((n) => `
-          <article class="note-item">
-            <time datetime="${escapeAttr(n.createdAt)}">${escapeHtml(formatDate(n.createdAt))}</time>
-            <p>${escapeHtml(n.body)}</p>
-          </article>
-        `).join("");
-      } catch (err) {
-        formNotesList.innerHTML = `<div class="notes-empty">${escapeHtml(err.message || "Could not load notes.")}</div>`;
+        statusHelp.textContent = "Opportunity pipeline active. Use Open notes to view and add comments in the sidebar.";
       }
     }
 
