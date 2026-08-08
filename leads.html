@@ -400,6 +400,7 @@
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button type="button" class="btn btn-primary" id="convertOpportunityBtn" hidden>+ Convert to Opportunity</button>
+              <button type="button" class="btn btn-primary" id="moveQuotedBtn" hidden>Move to Quoted</button>
               <button type="button" class="btn btn-notes" id="openFormNotesBtn" hidden>Open notes</button>
             </div>
           </div>
@@ -641,6 +642,31 @@
     }
 
 
+
+    async function advanceFormStatus(nextStatus, successMessage) {
+      if (!editingLeadId) {
+        showToast("Open a saved record first.");
+        return;
+      }
+      const data = getFormData();
+      if (!validate(data)) {
+        showToast("Please fix the highlighted fields first.");
+        return;
+      }
+      data.status = nextStatus;
+      const res = await api("/api/leads/" + encodeURIComponent(editingLeadId), {
+        method: "PATCH",
+        body: JSON.stringify(data)
+      });
+      editingStatus = res.lead.status;
+      updateFormStatusUI(editingStatus);
+      formTitle.textContent = "Edit " + (statusLabels[editingStatus] || "record");
+      formSubtitle.innerHTML = `Editing <strong>${escapeHtml(res.lead.customerName)}</strong> · Status: <strong>${escapeHtml(statusLabels[editingStatus] || editingStatus)}</strong>`;
+      formHint.textContent = successMessage;
+      showToast(successMessage);
+      return res;
+    }
+
     convertOpportunityBtn.addEventListener("click", async () => {
       if (!editingLeadId) {
         showToast("Save the lead first, then convert it.");
@@ -679,6 +705,22 @@
         return;
       }
       openNotesSidebar(editingLeadId, { focusComposer: true });
+    });
+
+    moveQuotedBtn.addEventListener("click", async () => {
+      if (editingStatus !== "opportunity") {
+        showToast("Only Opportunity records can move to Quoted.");
+        return;
+      }
+      moveQuotedBtn.disabled = true;
+      try {
+        await advanceFormStatus("quoted", "Moved to Opportunity — Quoted.");
+        openNotesSidebar(editingLeadId, { focusComposer: true });
+      } catch (err) {
+        showToast(err.message || "Could not move to quoted.");
+      } finally {
+        moveQuotedBtn.disabled = false;
+      }
     });
 
     form.addEventListener("submit", async (e) => {
@@ -742,12 +784,16 @@
       formStatusBadge.className = "status-badge " + (status || "lead");
       const isEditing = Boolean(editingLeadId);
       const isLead = (status || "lead") === "lead";
+      const isOpportunity = (status || "") === "opportunity";
       convertOpportunityBtn.hidden = !(isEditing && isLead);
+      moveQuotedBtn.hidden = !(isEditing && isOpportunity);
       openFormNotesBtn.hidden = !(isEditing && canAddNotes(status));
       if (!isEditing) {
         statusHelp.textContent = "Save the lead first, then convert it to Opportunity to add notes in the sidebar.";
       } else if (isLead) {
         statusHelp.textContent = "Ready to progress? Convert this lead to Opportunity — notes open in the sidebar.";
+      } else if (isOpportunity) {
+        statusHelp.textContent = "Opportunity stage. Add notes in the sidebar, or move to Quoted when the quote is ready.";
       } else {
         statusHelp.textContent = "Opportunity pipeline active. Use Open notes to view and add comments in the sidebar.";
       }
