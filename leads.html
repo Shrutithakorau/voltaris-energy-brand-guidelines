@@ -334,6 +334,28 @@
       box-shadow: inset 0 0 0 1px var(--cta);
     }
 
+  
+    .lost-panel { display: none; margin-bottom: 16px; }
+    .lost-panel.visible { display: block; }
+    .lost-panel h3 {
+      font-family: var(--font-serif); font-weight: 400; font-size: 1.2rem; margin-bottom: 6px;
+    }
+    .lost-panel .help { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+    .reason-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .reason-option {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px; border: 1px solid var(--border-mid); border-radius: 12px;
+      background: var(--cream); cursor: pointer; font-size: 14px; font-weight: 600;
+    }
+    .reason-option:has(input:checked) {
+      background: #FFF8DE; border-color: var(--cta); box-shadow: inset 0 0 0 1px var(--cta);
+    }
+    .reason-option input { margin-top: 2px; }
+    #lostExtraNote { min-height: 80px; margin-bottom: 10px; }
+    .lost-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .note-regular { display: block; }
+    .sidebar.mode-lost .note-regular { display: none; }
+
   </style>
 </head>
 <body>
@@ -464,6 +486,20 @@
     </div>
     <div class="sidebar-body">
       <div class="sidebar-card" id="sidebarSummary"></div>
+
+      <div class="lost-panel" id="lostReasonPanel">
+        <h3>Closed lost reason</h3>
+        <p class="help">Select a reason (required). You can add extra notes too. This is saved in notes history.</p>
+        <div class="reason-list" id="lostReasonList"></div>
+        <label for="lostExtraNote" style="display:block;font-size:13px;font-weight:600;margin-bottom:7px;">Additional notes <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
+        <textarea id="lostExtraNote" placeholder="Any extra context…"></textarea>
+        <div class="lost-actions">
+          <button type="button" class="btn btn-secondary" id="cancelLostBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmLostBtn">Confirm closed lost</button>
+        </div>
+      </div>
+
+      <div class="note-regular" id="regularNotesBlock">
       <form id="noteForm">
         <label for="noteBody" style="display:block;font-size:13px;font-weight:600;margin-bottom:7px;">Add note / comment</label>
         <textarea id="noteBody" placeholder="Call notes, quote discussion, next steps…" required></textarea>
@@ -471,6 +507,7 @@
       </form>
       <div class="notes-title">Notes history</div>
       <div id="notesList" class="note-list"></div>
+      </div>
     </div>
   </aside>
 
@@ -504,6 +541,17 @@
       closed_lost_or_won: "4. Closed",
       installation: "5. Installation"
     };
+    const LOST_REASONS = [
+      "Price too high / over budget",
+      "Chose another installer",
+      "Timing not right",
+      "Could not secure finance",
+      "Property / technical constraints",
+      "No longer interested",
+      "Uncontactable / no response",
+      "Other"
+    ];
+
     const ALLOWED_NEXT = {
       lead: ["opportunity"],
       opportunity: ["quoted"],
@@ -525,6 +573,7 @@
     let currentStatusFilter = "all";
     let allLeadsCache = [];
     let activeLeadId = null;
+    let sidebarMode = "notes"; // notes | closedLost
     let editingLeadId = null;
     let editingStatus = "lead";
 
@@ -552,6 +601,12 @@
     const formStatusBadge = document.getElementById("formStatusBadge");
     const statusHelp = document.getElementById("statusHelp");
     const workflowSteps = document.getElementById("workflowSteps");
+    const lostReasonPanel = document.getElementById("lostReasonPanel");
+    const lostReasonList = document.getElementById("lostReasonList");
+    const lostExtraNote = document.getElementById("lostExtraNote");
+    const confirmLostBtn = document.getElementById("confirmLostBtn");
+    const cancelLostBtn = document.getElementById("cancelLostBtn");
+    const regularNotesBlock = document.getElementById("regularNotesBlock");
 
     async function api(path, options = {}) {
       const res = await fetch(API_BASE + path, {
@@ -803,15 +858,55 @@
         showToast("Only Quoted records can be closed lost.");
         return;
       }
-      moveClosedWonBtn.disabled = true;
-      moveClosedLostBtn.disabled = true;
+      const data = getFormData();
+      if (!validate(data)) {
+        showToast("Please fix the highlighted fields first.");
+        return;
+      }
+      // Save current details first, then capture lost reason in sidebar
       try {
-        await advanceFormStatus("closed_lost", "Marked as Closed lost.");
+        data.status = editingStatus;
+        await api("/api/leads/" + encodeURIComponent(editingLeadId), {
+          method: "PATCH",
+          body: JSON.stringify(data)
+        });
+      } catch (err) {
+        showToast(err.message || "Could not save before closing.");
+        return;
+      }
+      openNotesSidebar(editingLeadId, { mode: "closedLost" });
+    });
+
+    cancelLostBtn.addEventListener("click", () => {
+      closeSidebar();
+    });
+
+    confirmLostBtn.addEventListener("click", async () => {
+      if (!editingLeadId) return;
+      const selected = document.querySelector('input[name="lostReason"]:checked');
+      if (!selected) {
+        showToast("Select a closed lost reason.");
+        return;
+      }
+      const reason = selected.value;
+      const extra = (lostExtraNote.value || "").trim();
+      let noteText = "Closed lost reason: " + reason;
+      if (extra) noteText += "\n\n" + extra;
+
+      confirmLostBtn.disabled = true;
+      try {
+        await api("/api/leads/" + encodeURIComponent(editingLeadId) + "/notes", {
+          method: "POST",
+          body: JSON.stringify({ body: noteText })
+        });
+        const res = await advanceFormStatus("closed_lost", "Marked as Closed lost.");
+        sidebarMode = "notes";
+        await openNotesSidebar(editingLeadId, { mode: "notes" });
+        showToast("Closed lost saved with reason.");
       } catch (err) {
         showToast(err.message || "Could not close as lost.");
       } finally {
-        moveClosedWonBtn.disabled = false;
-        moveClosedLostBtn.disabled = false;
+        confirmLostBtn.disabled = false;
       }
     });
 
@@ -929,36 +1024,62 @@
 
     function closeSidebar() {
       activeLeadId = null;
-      sidebar.classList.remove("open");
+      sidebarMode = "notes";
+      sidebar.classList.remove("open", "mode-lost");
       overlay.classList.remove("open");
       sidebar.setAttribute("aria-hidden", "true");
       noteBody.value = "";
+      if (lostExtraNote) lostExtraNote.value = "";
+      if (lostReasonPanel) lostReasonPanel.classList.remove("visible");
+      if (regularNotesBlock) regularNotesBlock.style.display = "";
     }
 
-    async function openNotesSidebar(leadId, { focusComposer = false } = {}) {
+    function renderLostReasonOptions() {
+      lostReasonList.innerHTML = LOST_REASONS.map((reason, idx) => `
+        <label class="reason-option">
+          <input type="radio" name="lostReason" value="${escapeAttr(reason)}" ${idx === 0 ? "" : ""} />
+          <span>${escapeHtml(reason)}</span>
+        </label>
+      `).join("");
+    }
+
+    async function openNotesSidebar(leadId, { focusComposer = false, mode = "notes" } = {}) {
       activeLeadId = leadId;
+      sidebarMode = mode;
       sidebar.classList.add("open");
       overlay.classList.add("open");
+      sidebar.classList.toggle("mode-lost", mode === "closedLost");
       sidebar.setAttribute("aria-hidden", "false");
       notesList.innerHTML = '<div class="notes-empty">Loading notes…</div>';
 
       try {
         const data = await api("/api/leads/" + encodeURIComponent(leadId) + "/notes");
         const lead = data.lead;
-        document.getElementById("sidebarName").textContent = lead.customerName;
+        document.getElementById("sidebarName").textContent =
+          mode === "closedLost" ? "Close as lost" : lead.customerName;
         document.getElementById("sidebarMeta").textContent =
           (statusLabels[lead.status] || lead.status) + " · " + (productLabels[lead.productType] || "");
         document.getElementById("sidebarSummary").innerHTML = `
+          <div><strong>Customer:</strong> ${escapeHtml(lead.customerName)}</div>
           <div><strong>Mobile:</strong> ${escapeHtml(lead.mobile)}</div>
           <div><strong>Email:</strong> ${escapeHtml(lead.email)}</div>
           <div><strong>Address:</strong> ${escapeHtml(lead.address)}</div>
           <div style="margin-top:6px"><strong>NMI:</strong> ${escapeHtml(lead.nmi || "—")} · <strong>Phase:</strong> ${escapeHtml(phaseLabels[lead.phase] || lead.phase)}</div>
         `;
 
-        const allowNotes = canAddNotes(lead.status);
-        noteForm.style.display = allowNotes ? "block" : "none";
+        const allowNotes = canAddNotes(lead.status) || mode === "closedLost";
+        if (mode === "closedLost") {
+          lostReasonPanel.classList.add("visible");
+          regularNotesBlock.style.display = "none";
+          renderLostReasonOptions();
+          lostExtraNote.value = "";
+        } else {
+          lostReasonPanel.classList.remove("visible");
+          regularNotesBlock.style.display = "";
+          noteForm.style.display = allowNotes ? "block" : "none";
+          if (focusComposer && allowNotes) noteBody.focus();
+        }
         renderNotes(data.notes || []);
-        if (focusComposer && allowNotes) noteBody.focus();
       } catch (err) {
         showToast(err.message || "Could not load notes.");
         closeSidebar();
