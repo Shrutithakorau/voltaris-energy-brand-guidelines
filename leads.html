@@ -108,6 +108,26 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
 
+    .db-status {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      color: var(--muted);
+    }
+    .db-status.ok {
+      background: #F0F8C8;
+      border-color: #C8DC30;
+      color: #3F4A12;
+    }
+    .db-status.bad {
+      background: #FEF3F2;
+      border-color: #FECACA;
+      color: #B42318;
+    }
+
     .page {
       max-width: 1120px;
       margin: 0 auto;
@@ -443,6 +463,7 @@
           <span>Lead Manager</span>
         </div>
       </a>
+      <div id="dbStatus" class="db-status">Checking database…</div>
       <nav class="tabs" aria-label="Views">
         <button type="button" class="tab active" data-view="form" id="tabForm">New lead</button>
         <button type="button" class="tab" data-view="dashboard" id="tabDash">Dashboard</button>
@@ -525,7 +546,7 @@
         </div>
 
         <div class="form-actions">
-          <p class="hint">Leads are stored in this browser for now.</p>
+          <p class="hint">Leads are saved to the SQLite database on the server.</p>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="reset" class="btn btn-secondary" id="resetBtn">Clear</button>
             <button type="submit" class="btn btn-primary">Add lead</button>
@@ -552,7 +573,9 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const STORAGE_KEY = "voltaris_leads_v1";
+    const API_BASE = window.location.protocol.startsWith("http")
+      ? ""
+      : "http://127.0.0.1:8787";
 
     const productLabels = {
       solar: "Solar",
@@ -570,30 +593,44 @@
     const tableWrap = document.getElementById("tableWrap");
     const statsEl = document.getElementById("stats");
     const searchInput = document.getElementById("searchInput");
+    const dbStatus = document.getElementById("dbStatus");
 
-    function loadLeads() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const data = raw ? JSON.parse(raw) : [];
-        return Array.isArray(data) ? data : [];
-      } catch {
-        return [];
+    async function api(path, options = {}) {
+      const res = await fetch(API_BASE + path, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options
+      });
+      let data = null;
+      try { data = await res.json(); } catch { data = null; }
+      if (!res.ok) {
+        const msg = (data && data.error) || ("Request failed (" + res.status + ")");
+        throw new Error(msg);
       }
-    }
-
-    function saveLeads(leads) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
-    }
-
-    function uid() {
-      return "lead_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      return data;
     }
 
     function showToast(message) {
       toast.textContent = message;
       toast.classList.add("show");
       clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toast.classList.remove("show"), 2600);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 2800);
+    }
+
+    function setDbStatus(ok, detail) {
+      if (!dbStatus) return;
+      dbStatus.textContent = ok ? "Database connected" : (detail || "Database offline");
+      dbStatus.className = "db-status " + (ok ? "ok" : "bad");
+    }
+
+    async function checkHealth() {
+      try {
+        await api("/api/health");
+        setDbStatus(true);
+        return true;
+      } catch {
+        setDbStatus(false, "Start the server (start-leads.bat)");
+        return false;
+      }
     }
 
     function switchView(view) {
@@ -659,7 +696,7 @@
       return ok;
     }
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const data = getFormData();
       if (!validate(data)) {
@@ -667,17 +704,20 @@
         return;
       }
 
-      const leads = loadLeads();
-      leads.unshift({
-        id: uid(),
-        ...data,
-        createdAt: new Date().toISOString()
-      });
-      saveLeads(leads);
-      form.reset();
-      clearFieldErrors();
-      showToast("Lead added successfully.");
-      switchView("dashboard");
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      try {
+        await api("/api/leads", { method: "POST", body: JSON.stringify(data) });
+        form.reset();
+        clearFieldErrors();
+        showToast("Lead saved to database.");
+        switchView("dashboard");
+      } catch (err) {
+        showToast(err.message || "Could not save lead.");
+        await checkHealth();
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
 
     form.addEventListener("reset", () => {
@@ -704,90 +744,108 @@
       return "both";
     }
 
-    function deleteLead(id) {
-      const leads = loadLeads().filter((l) => l.id !== id);
-      saveLeads(leads);
-      showToast("Lead removed.");
-      renderDashboard();
+    async function deleteLead(id) {
+      try {
+        await api("/api/leads/" + encodeURIComponent(id), { method: "DELETE" });
+        showToast("Lead deleted from database.");
+        renderDashboard();
+      } catch (err) {
+        showToast(err.message || "Could not delete lead.");
+      }
     }
 
-    function renderDashboard() {
-      const query = (searchInput.value || "").trim().toLowerCase();
-      const leads = loadLeads();
-      const filtered = !query
-        ? leads
-        : leads.filter((l) =>
-            [l.customerName, l.mobile, l.email, l.address, l.nmi, productLabels[l.productType], phaseLabels[l.phase]]
-              .join(" ")
-              .toLowerCase()
-              .includes(query)
-          );
+    async function renderDashboard() {
+      const query = (searchInput.value || "").trim();
+      tableWrap.innerHTML = '<div class="empty"><p>Loading leads from database…</p></div>';
 
-      const counts = {
-        total: leads.length,
-        solar: leads.filter((l) => l.productType === "solar").length,
-        battery: leads.filter((l) => l.productType === "battery").length,
-        both: leads.filter((l) => l.productType === "solar-battery").length
-      };
+      try {
+        const path = query
+          ? "/api/leads?q=" + encodeURIComponent(query)
+          : "/api/leads";
+        const data = await api(path);
+        setDbStatus(true);
+        const leads = data.leads || [];
 
-      statsEl.innerHTML = `
-        <div class="stat"><b>${counts.total}</b><span>Total leads</span></div>
-        <div class="stat"><b>${counts.solar}</b><span>Solar</span></div>
-        <div class="stat"><b>${counts.battery}</b><span>Battery</span></div>
-        <div class="stat"><b>${counts.both}</b><span>Solar + battery</span></div>
-      `;
+        const allData = query ? await api("/api/leads") : data;
+        const allLeads = allData.leads || [];
 
-      if (!filtered.length) {
+        const counts = {
+          total: allLeads.length,
+          solar: allLeads.filter((l) => l.productType === "solar").length,
+          battery: allLeads.filter((l) => l.productType === "battery").length,
+          both: allLeads.filter((l) => l.productType === "solar-battery").length
+        };
+
+        statsEl.innerHTML = `
+          <div class="stat"><b>${counts.total}</b><span>Total leads</span></div>
+          <div class="stat"><b>${counts.solar}</b><span>Solar</span></div>
+          <div class="stat"><b>${counts.battery}</b><span>Battery</span></div>
+          <div class="stat"><b>${counts.both}</b><span>Solar + battery</span></div>
+        `;
+
+        if (!leads.length) {
+          tableWrap.innerHTML = `
+            <div class="empty">
+              <h3>${allLeads.length ? "No matching leads" : "No leads yet"}</h3>
+              <p>${allLeads.length ? "Try a different search." : "Create your first lead to save it in the database."}</p>
+              ${!allLeads.length ? '<button type="button" class="btn btn-primary" id="emptyCta">Create a lead</button>' : ""}
+            </div>
+          `;
+          const emptyCta = document.getElementById("emptyCta");
+          if (emptyCta) emptyCta.addEventListener("click", () => switchView("form"));
+          return;
+        }
+
+        tableWrap.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Product</th>
+                <th>NMI</th>
+                <th>Phase</th>
+                <th>Added</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${leads.map((l) => `
+                <tr>
+                  <td class="name-cell">${escapeHtml(l.customerName)}</td>
+                  <td><a href="tel:${escapeAttr(l.mobile)}">${escapeHtml(l.mobile)}</a></td>
+                  <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
+                  <td>${escapeHtml(l.address)}</td>
+                  <td><span class="pill ${productClass(l.productType)}">${escapeHtml(productLabels[l.productType] || l.productType)}</span></td>
+                  <td class="muted">${escapeHtml(l.nmi || "—")}</td>
+                  <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
+                  <td class="muted">${escapeHtml(formatDate(l.createdAt))}</td>
+                  <td><button type="button" class="btn btn-danger" data-delete="${escapeAttr(l.id)}">Delete</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+
+        tableWrap.querySelectorAll("[data-delete]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (confirm("Delete this lead from the database?")) {
+              deleteLead(btn.getAttribute("data-delete"));
+            }
+          });
+        });
+      } catch (err) {
+        setDbStatus(false, "Start the server (start-leads.bat)");
+        statsEl.innerHTML = "";
         tableWrap.innerHTML = `
           <div class="empty">
-            <h3>${leads.length ? "No matching leads" : "No leads yet"}</h3>
-            <p>${leads.length ? "Try a different search." : "Create your first lead to see it here."}</p>
-            ${!leads.length ? '<button type="button" class="btn btn-primary" id="emptyCta">Create a lead</button>' : ""}
+            <h3>Database not connected</h3>
+            <p>Run <strong>start-leads.bat</strong> in the project folder, then open <strong>http://127.0.0.1:8787/leads.html</strong></p>
           </div>
         `;
-        const emptyCta = document.getElementById("emptyCta");
-        if (emptyCta) emptyCta.addEventListener("click", () => switchView("form"));
-        return;
       }
-
-      tableWrap.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Mobile</th>
-              <th>Email</th>
-              <th>Address</th>
-              <th>Product</th>
-              <th>NMI</th>
-              <th>Phase</th>
-              <th>Added</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filtered.map((l) => `
-              <tr>
-                <td class="name-cell">${escapeHtml(l.customerName)}</td>
-                <td><a href="tel:${escapeAttr(l.mobile)}">${escapeHtml(l.mobile)}</a></td>
-                <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
-                <td>${escapeHtml(l.address)}</td>
-                <td><span class="pill ${productClass(l.productType)}">${escapeHtml(productLabels[l.productType] || l.productType)}</span></td>
-                <td class="muted">${escapeHtml(l.nmi || "—")}</td>
-                <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
-                <td class="muted">${escapeHtml(formatDate(l.createdAt))}</td>
-                <td><button type="button" class="btn btn-danger" data-delete="${escapeAttr(l.id)}">Delete</button></td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      `;
-
-      tableWrap.querySelectorAll("[data-delete]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          if (confirm("Delete this lead?")) deleteLead(btn.getAttribute("data-delete"));
-        });
-      });
     }
 
     function escapeHtml(str) {
@@ -801,10 +859,15 @@
       return escapeHtml(str).replace(/'/g, "&#39;");
     }
 
-    searchInput.addEventListener("input", renderDashboard);
+    let searchTimer;
+    searchInput.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderDashboard, 200);
+    });
 
     const initial = (location.hash || "#form").replace("#", "");
     switchView(initial === "dashboard" ? "dashboard" : "form");
+    checkHealth();
   </script>
 </body>
 </html>
