@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voltaris Energy — Brand Guidelines</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --lime: #D4E84A;
+      --lime-pale: #F5FAD0;
+      --lime-mid: #C8DC30;
+      --cta: #FFC70A;
+      --cta-hover: #F0BB00;
+      --cta-text: #090909;
+      --cream: #F7F5EE;
+      --cream-warm: #EFEDE6;
+      --white: #FFFFFF;
+      --dark: #1A1E1B;
+      --dark-2: #232820;
+      --mid: #4A4F46;
+      --muted: #757870;
+      --border: #E2DDD4;
+      --border-mid: #C8C3B8;
+      --navy: #11234B;
+      --navy-2: #102445;
+      --teal: #0F766E;
+      --font-serif: "DM Serif Display", serif;
+      --font-sans: "DM Sans", sans-serif;
+      --font-alt: "Plus Jakarta Sans", sans-serif;
+      --max: 1080px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      color: var(--dark);
+      background: var(--cream);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    a { color: var(--navy); }
+    img { max-width: 100%; display: block; }
+
+    /* Chrome */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--dark);
+    }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 55%, #0d1a3a 100%);
+      display: grid;
+      place-items: center;
+      color: var(--cta);
+      font-family: var(--font-alt);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
+    }
+    .brand-lockup strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .brand-lockup span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .top-meta {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* Hero */
+    .hero {
+      background:
+        radial-gradient(ellipse 80% 60% at 85% 20%, rgba(255,199,10,.18), transparent 55%),
+        linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 55%, #0d1a3a 100%);
+      color: #fff;
+      padding: 72px 24px 64px;
+    }
+    .hero-inner { max-width: var(--max); margin: 0 auto; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--cta);
+      margin-bottom: 18px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--lime);
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      max-width: 14ch;
+      margin-bottom: 18px;
+    }
+    .hero p.lead {
+      max-width: 52ch;
+      font-size: 1.1rem;
+      color: rgba(255,255,255,.82);
+      margin-bottom: 28px;
+    }
+    .hero-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chip {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.16);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .chip.accent {
+      background: var(--cta);
+      color: var(--cta-text);
+      border-color: transparent;
+    }
+
+    /* Layout */
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .wrap { grid-template-columns: 1fr; }
+      .toc { position: static !important; display: flex; flex-wrap: wrap; gap: 8px; }
+      .toc a { padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px; background: #fff; }
+    }
+
+    .toc {
+      position: sticky;
+      top: 84px;
+      padding-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toc strong {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .toc a {
+      text-decoration: none;
+      color: var(--mid);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 0;
+      transition: color .15s;
+    }
+    .toc a:hover { color: var(--dark); }
+
+    main { padding-top: 40px; min-width: 0; }
+
+    section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 36px 40px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(26,30,27,.04);
+    }
+    @media (max-width: 640px) {
+      section { padding: 28px 20px; border-radius: 18px; }
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.7rem, 3vw, 2.15rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    h3 {
+      font-family: var(--font-alt);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 28px 0 10px;
+      letter-spacing: -0.01em;
+    }
+    p { color: var(--mid); margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+    ul, ol { margin: 10px 0 12px 1.2em; color: var(--mid); }
+    li { margin-bottom: 6px; }
+    blockquote {
+      margin: 18px 0;
+      padding: 18px 22px;
+      background: var(--cream);
+      border-left: 4px solid var(--cta);
+      border-radius: 0 14px 14px 0;
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      color: var(--dark);
+      line-height: 1.3;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+    @media (max-width: 720px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--dark);
+    }
+    .card p { font-size: 14px; margin: 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      background: var(--cream);
+    }
+    td strong { color: var(--dark); }
+    code, .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .92em;
+      background: var(--cream-warm);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    /* Swatches */
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .swatch {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+    .swatch-chip {
+      height: 84px;
+    }
+    .swatch-meta {
+      padding: 12px;
+    }
+    .swatch-meta strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .swatch-meta span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .type-sample {
+      margin-top: 16px;
+      display: grid;
+      gap: 16px;
+    }
+    .type-row {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--cream);
+    }
+    .type-row .label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .sample-serif {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      line-height: 1.15;
+      color: var(--dark);
+    }
+    .sample-sans {
+      font-family: var(--font-sans);
+      font-size: 1.05rem;
+      color: var(--mid);
+    }
+    .sample-alt {
+      font-family: var(--font-alt);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--dark);
+    }
+
+    .btn-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 12px 22px;
+      background: var(--cta);
+      color: var(--cta-text);
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(255,199,10,.35);
+      transition: background .2s, transform .2s;
+    }
+    .btn-demo:hover {
+      background: var(--cta-hover);
+      transform: translateY(-1px);
+    }
+    .btn-demo.dark {
+      background: var(--navy);
+      color: #fff;
+      box-shadow: none;
+    }
+
+    .pill-nav-demo {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 10px 8px 18px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      max-width: 520px;
+    }
+    .pill-nav-demo .links {
+      display: flex;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mid);
+    }
+    .pill-nav-demo .links span {
+      padding: 8px 12px;
+      border-radius: 999px;
+    }
+
+    .do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 640px) { .do-dont { grid-template-columns: 1fr; } }
+    .do, .dont {
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid var(--border);
+    }
+    .do { background: #f3faf4; border-color: #cfe8d4; }
+    .dont { background: #faf3f2; border-color: #ead4d0; }
+    .do h4, .dont h4 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .do h4 { color: #166534; }
+    .dont h4 { color: #991b1b; }
+
+    .checklist {
+      list-style: none;
+      margin-left: 0;
+      margin-top: 14px;
+    }
+    .checklist li {
+      position: relative;
+      padding: 10px 12px 10px 40px;
+      background: var(--cream);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      color: var(--dark);
+      font-size: 14px;
+    }
+    .checklist li::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-mid);
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    .quick-card {
+      margin-top: 16px;
+      background: linear-gradient(135deg, var(--navy), var(--navy-2));
+      color: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    footer {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px 60px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--mid); }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand-lockup" href="#top">
+        <div class="brand-mark" aria-hidden="true">V</div>
+        <div>
+          <strong>Voltaris Energy</strong>
+          <span>Brand Guidelines · v1.0</span>
+        </div>
+      </a>
+      <div class="top-meta">
+        Derived from voltarisenergy.com.au<br />
+        August 2026
+      </div>
+    </div>
+  </div>
+
+  <header class="hero" id="top">
+    <div class="hero-inner">
+      <div class="eyebrow">Brand system</div>
+      <h1>Voltaris Energy Brand Guidelines</h1>
+      <p class="lead">
+        A practical guide to keep Voltaris Energy marketing, web, and sales materials
+        visually and verbally consistent — based on the live website design system and messaging.
+      </p>
+      <div class="hero-chips">
+        <span class="chip accent">CTA #FFC70A</span>
+        <span class="chip">DM Serif Display + DM Sans</span>
+        <span class="chip">Australian-owned · CEC accredited</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <nav class="toc" aria-label="Contents">
+      <strong>Contents</strong>
+      <a href="#overview">1. Overview</a>
+      <a href="#personality">2. Personality</a>
+      <a href="#logo">3. Logo</a>
+      <a href="#colour">4. Colour</a>
+      <a href="#typography">5. Typography</a>
+      <a href="#imagery">6. Imagery</a>
+      <a href="#ui">7. UI patterns</a>
+      <a href="#messaging">8. Messaging</a>
+      <a href="#contact">9. Contact</a>
+      <a href="#geography">10. Geography</a>
+      <a href="#checklist">11. Checklist</a>
+      <a href="#quick">12. Quick ref</a>
+    </nav>
+
+    <main>
+      <section id="overview">
+        <div class="section-label">01 — Brand overview</div>
+        <h2>Who we are</h2>
+        <p>
+          Voltaris Energy is an <strong>Australian-owned</strong>, <strong>CEC-accredited</strong>
+          solar and battery installer. We design and install premium home and commercial solar
+          battery systems for Australian families and businesses — with honest local support from
+          consultation through ongoing aftercare.
+        </p>
+
+        <h3>Mission</h3>
+        <p>
+          Help Australians cut rising power costs, store solar energy, gain backup protection
+          during outages, and enjoy lasting daily savings through intelligent energy systems.
+        </p>
+
+        <h3>Positioning</h3>
+        <p>
+          Premium, trustworthy, and practical — not hype-driven. Emphasise expertise, Tier-1
+          hardware, rebate guidance, and end-to-end project management.
+        </p>
+
+        <h3>Primary headline</h3>
+        <blockquote>Power Your Home with Intelligent Energy</blockquote>
+        <ul>
+          <li>Power your property with intelligent solar</li>
+          <li>Powering Australian Homes with Smarter Energy Storage</li>
+          <li>Take Control of Your Energy Bills</li>
+        </ul>
+      </section>
+
+      <section id="personality">
+        <div class="section-label">02 — Personality</div>
+        <h2>How the brand feels</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h4>Trustworthy</h4>
+            <p>CEC accreditation, warranties, clear process, no-pressure consultation.</p>
+          </div>
+          <div class="card">
+            <h4>Local &amp; Australian</h4>
+            <p>Australian-owned, Melbourne home base, Australia-wide coverage.</p>
+          </div>
+          <div class="card">
+            <h4>Intelligent</h4>
+            <p>Tailored systems, usage-based design, savings estimates.</p>
+          </div>
+          <div class="card">
+            <h4>Premium but accessible</h4>
+            <p>Tier-1 brands with clear pricing, rebate and finance pathways.</p>
+          </div>
+        </div>
+        <h3>Tone of voice</h3>
+        <p>
+          Confident, clear, and helpful. Speak to homeowners and business owners in plain English.
+          Prefer benefits and outcomes (lower bills, backup, independence) over jargon. Be specific
+          where possible. Avoid aggressive sales language and empty buzzwords. Use Australian English.
+        </p>
+      </section>
+
+      <section id="logo">
+        <div class="section-label">03 — Logo</div>
+        <h2>Logo &amp; brand mark</h2>
+        <p>
+          Use official logo files only (SVG preferred). Recommended nav height ~<strong>44px</strong>.
+          Keep clear space roughly equal to the height of the mark’s “V”. Place on white or cream.
+        </p>
+        <div class="do-dont">
+          <div class="do">
+            <h4>Do</h4>
+            <ul>
+              <li>Maintain aspect ratio</li>
+              <li>Use on high-contrast backgrounds</li>
+              <li>Prefer SVG for digital</li>
+            </ul>
+          </div>
+          <div class="dont">
+            <h4>Don’t</h4>
+            <ul>
+              <li>Stretch, skew, or recolour arbitrarily</li>
+              <li>Add glow, outlines, or heavy shadows</li>
+              <li>Place on busy photos without a scrim</li>
+            </ul>
+          </div>
+        </div>
+        <h3>Favicons</h3>
+        <p><code>/favicon.svg</code> · <code>/favicon-32x32.png</code> · <code>/favicon-16x16.png</code> · <code>/favicon.ico</code></p>
+      </section>
+
+      <section id="colour">
+        <div class="section-label">04 — Colour</div>
+        <h2>Colour palette</h2>
+        <p>Tokens taken from the live site CSS (<code>:root</code> in home / site-chrome stylesheets).</p>
+
+        <h3>Primary</h3>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch-chip" style="background:#FFC70A"></div><div class="swatch-meta"><strong>CTA Yellow</strong><span>#FFC70A</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#F0BB00"></div><div class="swatch-meta"><strong>CTA Hover</strong><span>#F0BB00</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#090909"></div><div class="swatch-meta"><strong>CTA Text</strong><span>#090909</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#1A1E1B"></div><div class="swatch-meta"><strong>Dark</strong><span>#1A1E1B</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#232820"></div><div class="swatch-meta"><strong>Dark 2</strong><span>#232820</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#FFFFFF; border-bottom:1px solid #E2DDD4"></div><div class="swatch-meta"><strong>White</strong><span>#FFFFFF</span></div></div>
+        </div>
+
+        <h3>Accents</h3>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch-chip" style="background:#D4E84A"></div><div class="swatch-meta"><strong>Lime</strong><span>#D4E84A</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#C8DC30"></div><div class="swatch-meta"><strong>Lime Mid</strong><span>#C8DC30</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#F5FAD0"></div><div class="swatch-meta"><strong>Lime Pale</strong><span>#F5FAD0</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#11234B"></div><div class="swatch-meta"><strong>Navy</strong><span>#11234B</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#102445"></div><div class="swatch-meta"><strong>Navy 2</strong><span>#102445</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#0F766E"></div><div class="swatch-meta"><strong>Teal</strong><span>#0F766E</span></div></div>
+        </div>
+
+        <h3>Neutrals &amp; surfaces</h3>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch-chip" style="background:#F7F5EE"></div><div class="swatch-meta"><strong>Cream</strong><span>#F7F5EE</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#EFEDE6"></div><div class="swatch-meta"><strong>Cream Warm</strong><span>#EFEDE6</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#4A4F46"></div><div class="swatch-meta"><strong>Mid</strong><span>#4A4F46</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#757870"></div><div class="swatch-meta"><strong>Muted</strong><span>#757870</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#E2DDD4"></div><div class="swatch-meta"><strong>Border</strong><span>#E2DDD4</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background:#C8C3B8"></div><div class="swatch-meta"><strong>Border Mid</strong><span>#C8C3B8</span></div></div>
+        </div>
+
+        <h3>Usage rules</h3>
+        <ol>
+          <li><strong>Yellow (#FFC70A)</strong> is the action colour — reserve for CTAs and critical highlights.</li>
+          <li>CTA text on yellow is always <strong>#090909</strong>, never white.</li>
+          <li>Body text defaults to <strong>#1A1E1B</strong> on white/cream.</li>
+          <li>Use navy gradients for hero depth — not purple or generic tech gradients.</li>
+          <li>Lime is optional emphasis only; do not replace CTA yellow.</li>
+          <li>Maintain WCAG AA contrast, especially muted greys on cream.</li>
+        </ol>
+
+        <p style="margin-top:18px"><a class="btn-demo" href="#">Get a free quote</a></p>
+      </section>
+
+      <section id="typography">
+        <div class="section-label">05 — Typography</div>
+        <h2>Type system</h2>
+        <div class="type-sample">
+          <div class="type-row">
+            <div class="label">Display — DM Serif Display</div>
+            <div class="sample-serif">Power Your Home with Intelligent Energy</div>
+          </div>
+          <div class="type-row">
+            <div class="label">UI / Body — DM Sans</div>
+            <div class="sample-sans">Cut rising power costs with premium solar battery installation built specifically for Australian homes and families.</div>
+          </div>
+          <div class="type-row">
+            <div class="label">Marketing sans — Plus Jakarta Sans</div>
+            <div class="sample-alt">Find the Right Battery for Your Home</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Level</th><th>Style</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>H1</strong></td><td>DM Serif Display, ~40–56px, weight 400, dark #1A1E1B</td></tr>
+            <tr><td><strong>H2</strong></td><td>DM Serif Display or Plus Jakarta Sans Bold, ~32–40px</td></tr>
+            <tr><td><strong>H3</strong></td><td>Plus Jakarta Sans / DM Sans Semibold–Bold, ~20–24px</td></tr>
+            <tr><td><strong>Body</strong></td><td>DM Sans Regular 16px / line-height ~1.6</td></tr>
+            <tr><td><strong>Nav / CTA</strong></td><td>DM Sans Medium–Bold 14px</td></tr>
+            <tr><td><strong>Captions</strong></td><td>DM Sans 13–14px, muted #757870</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:14px">Also used on site in places: <strong>Inter</strong> (utility UI), <strong>Space Grotesk</strong> (compact labels).</p>
+      </section>
+
+      <section id="imagery">
+        <div class="section-label">06 — Imagery</div>
+        <h2>Photography &amp; icons</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h4>Photography</h4>
+            <p>Australian homes with solar/battery installs, clean rooftops, hybrid inverters, wall batteries. Natural daylight. Suburban/coastal Victoria feel. Avoid heavy filters and neon overlays.</p>
+          </div>
+          <div class="card">
+            <h4>Icons</h4>
+            <p>Custom SVG, consistent stroke. Trust badges (CEC, Australian-owned, rebates, premium batteries). Benefit icons for savings, backup, independence, grid reduction.</p>
+          </div>
+        </div>
+        <h3>Partner brands</h3>
+        <p>Sungrow · Tesla · AlphaESS · Sigenergy · GoodWe · Fox Ess — use official marks only; never alter or claim manufacture.</p>
+      </section>
+
+      <section id="ui">
+        <div class="section-label">07 — UI patterns</div>
+        <h2>Signature interface</h2>
+        <div class="pill-nav-demo" aria-hidden="true">
+          <strong style="font-size:13px">Voltaris</strong>
+          <div class="links"><span>Solutions</span><span>Rebates</span><span>Areas</span></div>
+          <a class="btn-demo" href="#" style="margin:0;padding:10px 18px;box-shadow:none">Get a free quote</a>
+        </div>
+        <ul style="margin-top:18px">
+          <li><strong>Floating pill navigation</strong> — white, fully rounded, border #E2DDD4, soft shadow</li>
+          <li><strong>Pill CTAs</strong> — yellow fill, bold dark label</li>
+          <li><strong>Surfaces</strong> — cream or white; avoid heavy multi-layer shadows</li>
+          <li><strong>Motion</strong> — restrained fade-up / gentle float; purposeful, not noisy</li>
+          <li><strong>Max chrome width</strong> — ~1180px</li>
+        </ul>
+        <table>
+          <thead><tr><th>Element</th><th>Radius</th></tr></thead>
+          <tbody>
+            <tr><td>Nav / primary CTA</td><td>Fully rounded (pill)</td></tr>
+            <tr><td>Dropdowns</td><td>~18px</td></tr>
+            <tr><td>Menu links / small controls</td><td>~12px</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="messaging">
+        <div class="section-label">08 — Messaging</div>
+        <h2>What we say</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h4>Residential</h4>
+            <p>Lower bills, backup power, rebate-assisted solar + battery. Tailored to household usage. CEC-accredited installers and Tier-1 hardware.</p>
+          </div>
+          <div class="card">
+            <h4>Commercial</h4>
+            <p>ROI, STCs/LGCs, sustainability credentials, minimal disruption. Rooftops, ground mounts, storage, EV charging, monitoring.</p>
+          </div>
+        </div>
+
+        <h3>Proof points</h3>
+        <ul>
+          <li>CEC Accredited Installers · Australian-Owned · Government Rebate Assistance</li>
+          <li>Premium / Tier-1 battery &amp; panel brands</li>
+          <li>End-to-end project management + ongoing support</li>
+          <li>Install timing often 1–2 days residential; 2–5 days commercial (site-dependent)</li>
+          <li>Battery warranties commonly 10–15 years (brand-dependent)</li>
+        </ul>
+
+        <h3>Preferred CTAs</h3>
+        <p>
+          <a class="btn-demo" href="#">Get a free quote</a>
+          <a class="btn-demo dark" href="tel:0430741441" style="margin-left:8px">Call 0430 741 441</a>
+        </p>
+
+        <h3>Favour</h3>
+        <p>intelligent energy · premium · tailored · accredited · backup · savings · rebate · Australian-owned · Tier-1 · end-to-end · no obligation</p>
+        <h3>Avoid</h3>
+        <p>cheap / cheapest · hard sell · scare tactics · unverifiable “#1” claims · greenwashing · US spelling in AU materials</p>
+        <p style="margin-top:12px"><em>Always verify live pricing, inclusions, and rebate assumptions before publishing.</em></p>
+      </section>
+
+      <section id="contact">
+        <div class="section-label">09 — Contact &amp; legal</div>
+        <h2>Details for materials</h2>
+        <table>
+          <thead><tr><th>Item</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Website</strong></td><td><a href="https://www.voltarisenergy.com.au">https://www.voltarisenergy.com.au</a></td></tr>
+            <tr><td><strong>Phone</strong></td><td>0430 741 441</td></tr>
+            <tr><td><strong>Privacy</strong></td><td>Reference Privacy Policy on voltarisenergy.com.au</td></tr>
+            <tr><td><strong>Leads</strong></td><td>Details stay private; team typically responds within 24 hours</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="geography">
+        <div class="section-label">10 — Service areas</div>
+        <h2>Where we operate</h2>
+        <p>Lead with <strong>Melbourne</strong> as home base. National coverage messaging:</p>
+        <div class="hero-chips" style="margin-top:14px">
+          <span class="chip" style="background:var(--cream);color:var(--dark);border-color:var(--border)">Melbourne</span>
+          <span class="chip" style="background:var(--cream);color:var(--dark);border-color:var(--border)">Sydney</span>
+          <span class="chip" style="background:var(--cream);color:var(--dark);border-color:var(--border)">Brisbane</span>
+          <span class="chip" style="background:var(--cream);color:var(--dark);border-color:var(--border)">Adelaide</span>
+          <span class="chip" style="background:var(--cream);color:var(--dark);border-color:var(--border)">Perth</span>
+          <span class="chip" style="background:var(--cream);color:var(--dark);border-color:var(--border)">Canberra (commercial)</span>
+        </div>
+      </section>
+
+      <section id="checklist">
+        <div class="section-label">11 — Application checklist</div>
+        <h2>Before you publish</h2>
+        <ul class="checklist">
+          <li>Logo is correct file, unstretched, with clear space</li>
+          <li>Primary CTA uses #FFC70A with #090909 text</li>
+          <li>Headlines use approved serif/sans pairing</li>
+          <li>Spelling is Australian English</li>
+          <li>Claims match current offers, warranties, and rebate rules</li>
+          <li>Partner brand logos follow their guidelines</li>
+          <li>Contact phone / URL are correct</li>
+          <li>Contrast is readable on cream and navy backgrounds</li>
+        </ul>
+      </section>
+
+      <section id="quick">
+        <div class="section-label">12 — Quick reference</div>
+        <h2>At a glance</h2>
+        <div class="quick-card">Brand:     Voltaris Energy
+Promise:   Intelligent solar &amp; battery for Australian homes &amp; businesses
+CTA:       #FFC70A  text #090909
+Text:      #1A1E1B
+Surface:   #FFFFFF / #F7F5EE
+Accent:    Navy #11234B · Lime #D4E84A
+Fonts:     DM Serif Display (display) + DM Sans (UI/body)
+CTA copy:  Get a free quote  |  0430 741 441</div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>
+      Working brand guideline synthesised from the public
+      <a href="https://www.voltarisenergy.com.au">Voltaris Energy</a>
+      website design system and messaging. Update tokens, pricing, and claims whenever the live site or brand assets change.
+    </p>
+  </footer>
+</body>
+</html>
