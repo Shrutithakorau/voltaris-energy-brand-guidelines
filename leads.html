@@ -48,10 +48,10 @@
       display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
     }
     .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--dark); cursor: pointer; }
-    .brand-mark {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--navy), var(--navy-2));
-      color: var(--cta); display: grid; place-items: center; font-weight: 700; font-size: 18px;
+    .brand-logo {
+      height: 44px;
+      width: auto;
+      display: block;
     }
     .brand strong { display: block; font-size: 15px; font-weight: 700; }
     .brand span { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
@@ -217,11 +217,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand" id="brandLink">
-        <div class="brand-mark" aria-hidden="true">V</div>
-        <div>
-          <strong>Voltaris Energy</strong>
-          <span>Lead Manager</span>
-        </div>
+        <img class="brand-logo" src="assets/voltaris-logo.png" alt="Voltaris Energy" />
       </div>
       <div class="top-actions">
         <div id="dbStatus" class="db-status">Checking database…</div>
