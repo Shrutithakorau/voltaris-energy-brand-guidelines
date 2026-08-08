@@ -1,20 +1,15 @@
 @echo off
 cd /d "%~dp0"
-echo Starting Voltaris Lead Manager...
+echo Starting local static server for Voltaris Lead Manager...
+echo Make sure js\supabase-config.js has your Supabase URL + anon key.
 echo.
-echo IMPORTANT: Keep this window open.
-echo Open this URL only: http://127.0.0.1:8787/leads.html
-echo Do NOT open leads.html by double-clicking the file.
+echo Opening http://127.0.0.1:8787/leads.html
+echo Keep this window open.
 echo.
-
-REM free port if old process stuck (best effort)
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8787 ^| findstr LISTENING') do (
   taskkill /F /PID %%a >nul 2>&1
 )
-
 start "" "http://127.0.0.1:8787/leads.html"
-py -3 -u server\app.py
-if errorlevel 1 python -u server\app.py
-echo.
-echo Server stopped.
+py -3 -m http.server 8787 --bind 127.0.0.1
+if errorlevel 1 python -m http.server 8787 --bind 127.0.0.1
 pause
