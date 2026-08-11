@@ -4,6 +4,7 @@
  */
 (function () {
   const PRODUCT_TYPES = new Set(["solar", "battery", "solar-battery"]);
+  const LEAD_SOURCES = new Set(["social_media", "third_party", "channel_partner"]);
   const PHASES = new Set(["single", "three"]);
   const STATUSES = new Set([
     "lead",
@@ -77,6 +78,7 @@
       address: row.address,
       productType: row.product_type,
       nmi: row.nmi || "",
+      leadSource: row.lead_source || "",
       phase: row.phase,
       status: row.status,
       createdAt: row.created_at,
@@ -100,6 +102,7 @@
     const address = String(payload.address || "").trim();
     const productType = String(payload.productType || "").trim();
     const nmi = String(payload.nmi || "").trim().toUpperCase();
+    const leadSource = String(payload.leadSource || "").trim();
     const phase = String(payload.phase || "").trim();
     let status = String(payload.status || "lead").trim().toLowerCase() || "lead";
 
@@ -122,6 +125,11 @@
         throw new Error("Product type must be solar, battery, or solar-battery.");
       }
     }
+    if (!partial || "leadSource" in payload) {
+      if (!LEAD_SOURCES.has(leadSource)) {
+        throw new Error("Select a source of lead.");
+      }
+    }
     if (!partial || "phase" in payload) {
       if (!PHASES.has(phase)) throw new Error("Phase must be single or three.");
     }
@@ -138,6 +146,7 @@
       address,
       product_type: productType,
       nmi: nmi || null,
+      lead_source: leadSource,
       phase,
       status,
     };
@@ -161,6 +170,7 @@
           l.email,
           l.address,
           l.nmi,
+          l.leadSource,
           l.productType,
           l.phase,
           l.status,
@@ -227,6 +237,7 @@
       address: payload.address ?? current.address,
       productType: payload.productType ?? current.productType,
       nmi: payload.nmi ?? current.nmi,
+      leadSource: payload.leadSource ?? current.leadSource,
       phase: payload.phase ?? current.phase,
       status: requestedStatus,
     };

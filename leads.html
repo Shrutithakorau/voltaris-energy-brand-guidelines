@@ -430,6 +430,16 @@
             <textarea id="address" name="address" required placeholder="Street, suburb, state, postcode"></textarea>
             <div class="error-text">Enter the supply address.</div>
           </div>
+          <div class="field full" id="field-source">
+            <label for="leadSource">Source of lead</label>
+            <select id="leadSource" name="leadSource" required>
+              <option value="">Select source</option>
+              <option value="social_media">Social media leads</option>
+              <option value="third_party">3rd party leads</option>
+              <option value="channel_partner">Channel partner leads</option>
+            </select>
+            <div class="error-text">Select a source of lead.</div>
+          </div>
           <div class="section-label">Product type</div>
           <div class="field full" id="field-product">
             <div class="choice-grid" role="radiogroup" aria-label="Product type">
@@ -527,6 +537,11 @@
       "solar-battery": "Solar and battery"
     };
     const phaseLabels = { single: "Single phase", three: "Three phase" };
+    const sourceLabels = {
+      social_media: "Social media leads",
+      third_party: "3rd party leads",
+      channel_partner: "Channel partner leads"
+    };
 
     const statusOptions = [
       { value: "lead", label: "Lead" },
@@ -693,6 +708,7 @@
       form.email.value = lead.email || "";
       form.address.value = lead.address || "";
       form.nmi.value = lead.nmi || "";
+      form.leadSource.value = lead.leadSource || "";
       const product = form.querySelector(`input[name="productType"][value="${lead.productType}"]`);
       if (product) product.checked = true;
       const phase = form.querySelector(`input[name="phase"][value="${lead.phase}"]`);
@@ -756,6 +772,7 @@
         address: form.address.value.trim(),
         productType: (form.querySelector('input[name="productType"]:checked') || {}).value || "",
         nmi: form.nmi.value.trim().toUpperCase(),
+        leadSource: form.leadSource.value.trim(),
         phase: (form.querySelector('input[name="phase"]:checked') || {}).value || "",
         status: editingLeadId ? editingStatus : "lead"
       };
@@ -768,6 +785,7 @@
       if (!data.mobile || !isValidMobile(data.mobile)) { setInvalid("field-mobile"); ok = false; }
       if (!data.email || !isValidEmail(data.email)) { setInvalid("field-email"); ok = false; }
       if (!data.address) { setInvalid("field-address"); ok = false; }
+      if (!data.leadSource) { setInvalid("field-source"); ok = false; }
       if (!data.productType) { setInvalid("field-product"); ok = false; }
       if (!data.phase) { setInvalid("field-phase"); ok = false; }
       if (data.nmi && !/^[A-Z0-9]{1,11}$/i.test(data.nmi)) { setInvalid("field-nmi"); ok = false; }
@@ -1084,6 +1102,7 @@
           <div><strong>Email:</strong> ${escapeHtml(lead.email)}</div>
           <div><strong>Address:</strong> ${escapeHtml(lead.address)}</div>
           <div style="margin-top:6px"><strong>NMI:</strong> ${escapeHtml(lead.nmi || "-")} - <strong>Phase:</strong> ${escapeHtml(phaseLabels[lead.phase] || lead.phase)}</div>
+          <div><strong>Source:</strong> ${escapeHtml(sourceLabels[lead.leadSource] || lead.leadSource || "-")}</div>
         `;
 
         const allowNotes = canAddNotes(lead.status) || mode === "closedLost";
@@ -1231,7 +1250,7 @@
         if (query) {
           const q = query.toLowerCase();
           leads = leads.filter((l) =>
-            [l.customerName, l.mobile, l.email, l.address, l.nmi, productLabels[l.productType], phaseLabels[l.phase], statusLabels[l.status]]
+            [l.customerName, l.mobile, l.email, l.address, l.nmi, sourceLabels[l.leadSource], productLabels[l.productType], phaseLabels[l.phase], statusLabels[l.status]]
               .join(" ").toLowerCase().includes(q)
           );
         }
@@ -1262,6 +1281,7 @@
                 <th>Email</th>
                 <th>Address</th>
                 <th>Product</th>
+                <th>Source</th>
                 <th>NMI</th>
                 <th>Phase</th>
                 <th>Status</th>
@@ -1281,6 +1301,7 @@
                   <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
                   <td>${escapeHtml(l.address)}</td>
                   <td><span class="pill ${productClass(l.productType)}">${escapeHtml(productLabels[l.productType] || l.productType)}</span></td>
+                  <td>${escapeHtml(sourceLabels[l.leadSource] || l.leadSource || "-")}</td>
                   <td class="muted">${escapeHtml(l.nmi || "-")}</td>
                   <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
                   <td>${statusSelectHtml(l)}</td>

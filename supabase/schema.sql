@@ -11,6 +11,7 @@ create table if not exists public.leads (
   address text not null,
   product_type text not null check (product_type in ('solar', 'battery', 'solar-battery')),
   nmi text,
+  lead_source text check (lead_source is null or lead_source in ('social_media', 'third_party', 'channel_partner')),
   phase text not null check (phase in ('single', 'three')),
   status text not null default 'lead' check (
     status in ('lead', 'opportunity', 'quoted', 'closed_won', 'closed_lost', 'installation')
@@ -50,3 +51,4 @@ create policy "anon_notes_all"
   to anon, authenticated
   using (true)
   with check (true);
+
