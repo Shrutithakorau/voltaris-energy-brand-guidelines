@@ -360,6 +360,10 @@
       text-align: center;
     }
     .setup-banner a { color: #FFC70A; }
+  
+    .source-detail { display: none; margin-top: 4px; }
+    .source-detail.visible { display: block; }
+    .source-detail .choice-grid { grid-template-columns: 1fr 1fr; }
   </style>
 </head>
 <body>
@@ -434,11 +438,29 @@
             <label for="leadSource">Source of lead</label>
             <select id="leadSource" name="leadSource" required>
               <option value="">Select source</option>
-              <option value="social_media">Social media leads</option>
+              <option value="social_media">Social media</option>
               <option value="third_party">3rd party leads</option>
-              <option value="channel_partner">Channel partner leads</option>
+              <option value="channel_partner">Channel partners</option>
             </select>
             <div class="error-text">Select a source of lead.</div>
+          </div>
+
+          <div class="field full source-detail" id="field-source-social">
+            <label>Social media option</label>
+            <div class="choice-grid" role="radiogroup" aria-label="Social media option">
+              <label class="choice"><input type="radio" name="leadSourceDetailSocial" value="website" /><span>Website lead</span></label>
+              <label class="choice"><input type="radio" name="leadSourceDetailSocial" value="social_media" /><span>Social media lead</span></label>
+            </div>
+            <div class="error-text">Select website or social media lead.</div>
+          </div>
+
+          <div class="field full source-detail" id="field-source-channel">
+            <label>Channel partner option</label>
+            <div class="choice-grid" role="radiogroup" aria-label="Channel partner option">
+              <label class="choice"><input type="radio" name="leadSourceDetailChannel" value="reference" /><span>Reference leads</span></label>
+              <label class="choice"><input type="radio" name="leadSourceDetailChannel" value="consultant" /><span>Consultant leads</span></label>
+            </div>
+            <div class="error-text">Select reference or consultant leads.</div>
           </div>
           <div class="section-label">Product type</div>
           <div class="field full" id="field-product">
@@ -538,9 +560,15 @@
     };
     const phaseLabels = { single: "Single phase", three: "Three phase" };
     const sourceLabels = {
-      social_media: "Social media leads",
+      social_media: "Social media",
       third_party: "3rd party leads",
-      channel_partner: "Channel partner leads"
+      channel_partner: "Channel partners"
+    };
+    const sourceDetailLabels = {
+      website: "Website lead",
+      social_media: "Social media lead",
+      reference: "Reference leads",
+      consultant: "Consultant leads"
     };
 
     const statusOptions = [
@@ -694,12 +722,49 @@
       formSubtitle.innerHTML = 'New records start as <strong>Lead</strong>. Move them through the pipeline on the dashboard.';
       formHint.textContent = "Saved to Supabase with status: Lead";
       formSubmitBtn.textContent = "Save lead";
+      syncSourceDetailUI();
       updateFormStatusUI("lead");
     }
 
     function goAddLead() {
       resetFormMode();
       switchView("form");
+    }
+
+
+    function syncSourceDetailUI() {
+      const source = form.leadSource.value;
+      const social = document.getElementById("field-source-social");
+      const channel = document.getElementById("field-source-channel");
+      if (!social || !channel) return;
+      social.classList.toggle("visible", source === "social_media");
+      channel.classList.toggle("visible", source === "channel_partner");
+      social.classList.remove("invalid");
+      channel.classList.remove("invalid");
+      const sourceField = document.getElementById("field-source");
+      if (sourceField) sourceField.classList.remove("invalid");
+      if (source !== "social_media") {
+        form.querySelectorAll('input[name="leadSourceDetailSocial"]').forEach((el) => { el.checked = false; });
+      }
+      if (source !== "channel_partner") {
+        form.querySelectorAll('input[name="leadSourceDetailChannel"]').forEach((el) => { el.checked = false; });
+      }
+    }
+
+    function getSelectedSourceDetail(source) {
+      if (source === "social_media") {
+        return (form.querySelector('input[name="leadSourceDetailSocial"]:checked') || {}).value || "";
+      }
+      if (source === "channel_partner") {
+        return (form.querySelector('input[name="leadSourceDetailChannel"]:checked') || {}).value || "";
+      }
+      return "";
+    }
+
+    function formatSourceDisplay(lead) {
+      const source = sourceLabels[lead.leadSource] || lead.leadSource || "-";
+      const detail = sourceDetailLabels[lead.leadSourceDetail] || "";
+      return detail ? (source + " - " + detail) : source;
     }
 
     function fillForm(lead) {
@@ -709,6 +774,15 @@
       form.address.value = lead.address || "";
       form.nmi.value = lead.nmi || "";
       form.leadSource.value = lead.leadSource || "";
+      syncSourceDetailUI();
+      if (lead.leadSource === "social_media" && lead.leadSourceDetail) {
+        const el = form.querySelector(`input[name="leadSourceDetailSocial"][value="${lead.leadSourceDetail}"]`);
+        if (el) el.checked = true;
+      }
+      if (lead.leadSource === "channel_partner" && lead.leadSourceDetail) {
+        const el = form.querySelector(`input[name="leadSourceDetailChannel"][value="${lead.leadSourceDetail}"]`);
+        if (el) el.checked = true;
+      }
       const product = form.querySelector(`input[name="productType"][value="${lead.productType}"]`);
       if (product) product.checked = true;
       const phase = form.querySelector(`input[name="phase"][value="${lead.phase}"]`);
@@ -752,6 +826,7 @@
       switchView("dashboard");
     });
     document.getElementById("closeSidebarBtn").addEventListener("click", closeSidebar);
+    form.leadSource.addEventListener("change", syncSourceDetailUI);
     overlay.addEventListener("click", closeSidebar);
 
     function clearFieldErrors() {
@@ -773,6 +848,7 @@
         productType: (form.querySelector('input[name="productType"]:checked') || {}).value || "",
         nmi: form.nmi.value.trim().toUpperCase(),
         leadSource: form.leadSource.value.trim(),
+        leadSourceDetail: getSelectedSourceDetail(form.leadSource.value.trim()),
         phase: (form.querySelector('input[name="phase"]:checked') || {}).value || "",
         status: editingLeadId ? editingStatus : "lead"
       };
@@ -786,6 +862,8 @@
       if (!data.email || !isValidEmail(data.email)) { setInvalid("field-email"); ok = false; }
       if (!data.address) { setInvalid("field-address"); ok = false; }
       if (!data.leadSource) { setInvalid("field-source"); ok = false; }
+      if (data.leadSource === "social_media" && !data.leadSourceDetail) { setInvalid("field-source-social"); ok = false; }
+      if (data.leadSource === "channel_partner" && !data.leadSourceDetail) { setInvalid("field-source-channel"); ok = false; }
       if (!data.productType) { setInvalid("field-product"); ok = false; }
       if (!data.phase) { setInvalid("field-phase"); ok = false; }
       if (data.nmi && !/^[A-Z0-9]{1,11}$/i.test(data.nmi)) { setInvalid("field-nmi"); ok = false; }
@@ -1102,7 +1180,7 @@
           <div><strong>Email:</strong> ${escapeHtml(lead.email)}</div>
           <div><strong>Address:</strong> ${escapeHtml(lead.address)}</div>
           <div style="margin-top:6px"><strong>NMI:</strong> ${escapeHtml(lead.nmi || "-")} - <strong>Phase:</strong> ${escapeHtml(phaseLabels[lead.phase] || lead.phase)}</div>
-          <div><strong>Source:</strong> ${escapeHtml(sourceLabels[lead.leadSource] || lead.leadSource || "-")}</div>
+          <div><strong>Source:</strong> ${escapeHtml(formatSourceDisplay(lead))}</div>
         `;
 
         const allowNotes = canAddNotes(lead.status) || mode === "closedLost";
@@ -1250,7 +1328,7 @@
         if (query) {
           const q = query.toLowerCase();
           leads = leads.filter((l) =>
-            [l.customerName, l.mobile, l.email, l.address, l.nmi, sourceLabels[l.leadSource], productLabels[l.productType], phaseLabels[l.phase], statusLabels[l.status]]
+            [l.customerName, l.mobile, l.email, l.address, l.nmi, sourceLabels[l.leadSource], sourceDetailLabels[l.leadSourceDetail], productLabels[l.productType], phaseLabels[l.phase], statusLabels[l.status]]
               .join(" ").toLowerCase().includes(q)
           );
         }
@@ -1301,7 +1379,7 @@
                   <td><a href="mailto:${escapeAttr(l.email)}">${escapeHtml(l.email)}</a></td>
                   <td>${escapeHtml(l.address)}</td>
                   <td><span class="pill ${productClass(l.productType)}">${escapeHtml(productLabels[l.productType] || l.productType)}</span></td>
-                  <td>${escapeHtml(sourceLabels[l.leadSource] || l.leadSource || "-")}</td>
+                  <td>${escapeHtml(formatSourceDisplay(l))}</td>
                   <td class="muted">${escapeHtml(l.nmi || "-")}</td>
                   <td>${escapeHtml(phaseLabels[l.phase] || l.phase)}</td>
                   <td>${statusSelectHtml(l)}</td>
