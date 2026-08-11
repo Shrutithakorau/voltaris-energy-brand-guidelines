@@ -12,6 +12,7 @@ create table if not exists public.leads (
   product_type text not null check (product_type in ('solar', 'battery', 'solar-battery')),
   nmi text,
   lead_source text check (lead_source is null or lead_source in ('social_media', 'third_party', 'channel_partner')),
+  lead_source_detail text check (lead_source_detail is null or lead_source_detail in ('website', 'social_media', 'reference', 'consultant')),
   phase text not null check (phase in ('single', 'three')),
   status text not null default 'lead' check (
     status in ('lead', 'opportunity', 'quoted', 'closed_won', 'closed_lost', 'installation')
