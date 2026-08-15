@@ -381,6 +381,19 @@
   }
 
 
+
+  function isEmailAllowed(email) {
+    const cfg = window.SUPABASE_CONFIG || {};
+    const value = String(email || "").trim().toLowerCase();
+    if (!value) return false;
+    const exact = (cfg.allowedEmails || []).map((e) => String(e).trim().toLowerCase());
+    if (exact.includes(value)) return true;
+    const domains = (cfg.allowedEmailDomains || []).map((d) =>
+      String(d).trim().toLowerCase().replace(/^@/, "")
+    );
+    return domains.some((domain) => domain && value.endsWith("@" + domain));
+  }
+
   async function getSession() {
     const db = getClient();
     const { data, error } = await db.auth.getSession();
@@ -432,6 +445,7 @@
     getClient,
     getSession,
     getUser,
+    isEmailAllowed,
     onAuthStateChange,
     signInWithGoogle,
     signOut,

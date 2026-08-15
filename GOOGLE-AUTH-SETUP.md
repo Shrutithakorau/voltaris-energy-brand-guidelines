@@ -88,3 +88,15 @@ create policy "authenticated_notes_delete"
 ## 4. Test
 
 Open the app → **Continue with Google** → you should land on the dashboard.
+
+## 5. Restrict who can access (email allowlist)
+
+Allowed:
+- any email ending in `@voltarisenergy.com.au`
+- `rathod.shruti8@gmail.com`
+- `jaythakor1985@gmail.com`
+
+1. App check is already in `js/supabase-config.js`
+2. In SQL Editor, paste and run `supabase/allowlist-emails-rls.sql` so the database also blocks other accounts
+
+To add/remove people later, update both `js/supabase-config.js` and the email list inside `allowlist-emails-rls.sql`, then re-run the SQL.
