@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
@@ -481,10 +481,9 @@
 </head>
 <body class="auth-pending">
 
-  <div class="login-screen" id="loginScreen" role="main" aria-labelledby="loginTitle">
+  <div class="login-screen" id="loginScreen" role="main" aria-label="Sign in">
     <div class="login-card">
       <img class="login-logo" src="assets/voltaris-logo.png" alt="Voltaris Energy" />
-      <h1 id="loginTitle">Lead Manager</h1>
       <p>Sign in with your Google account to access the dashboard.</p>
       <button type="button" class="btn-google" id="googleSignInBtn">
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -520,7 +519,7 @@
       <div class="page-header">
         <div>
           <h1 id="dashTitle">Lead dashboard</h1>
-          <p>Track every customer from lead → opportunity → quote → close, then installation when won.</p>
+          <p>Track every customer from lead â†’ opportunity â†’ quote â†’ close, then installation when won.</p>
         </div>
         <button type="button" class="btn btn-primary" id="dashAddBtn">+ Add new lead</button>
       </div>
@@ -529,14 +528,14 @@
 
       <div class="dash-toolbar">
         <div class="hint" id="filterHint">Showing all records</div>
-        <input class="search" id="searchInput" type="search" placeholder="Search leads…" aria-label="Search leads" />
+        <input class="search" id="searchInput" type="search" placeholder="Search leadsâ€¦" aria-label="Search leads" />
       </div>
 
       <div class="table-wrap" id="tableWrap"></div>
     </section>
 
     <section class="view" id="view-form" aria-labelledby="formTitle">
-      <button type="button" class="back-link" id="backToDash">← Back to dashboard</button>
+      <button type="button" class="back-link" id="backToDash">â† Back to dashboard</button>
       <div class="page-header">
         <div>
           <h1 id="formTitle">Add new lead</h1>
@@ -632,7 +631,7 @@
               <button type="button" class="btn btn-notes" id="openFormNotesBtn" hidden>Open notes</button>
             </div>
           </div>
-          <p class="hint" id="statusHelp">Save the lead first, then follow the workflow: Lead → Opportunity → Quoted → Closed won/lost → Installation.</p>
+          <p class="hint" id="statusHelp">Save the lead first, then follow the workflow: Lead â†’ Opportunity â†’ Quoted â†’ Closed won/lost â†’ Installation.</p>
         </div>
 
         <div class="form-actions">
@@ -654,7 +653,7 @@
         <h2 id="sidebarName">Notes</h2>
         <div class="sidebar-meta" id="sidebarMeta"></div>
       </div>
-      <button type="button" class="icon-btn" id="closeSidebarBtn" aria-label="Close notes">×</button>
+      <button type="button" class="icon-btn" id="closeSidebarBtn" aria-label="Close notes">Ã—</button>
     </div>
     <div class="sidebar-body">
       <div class="sidebar-card" id="sidebarSummary"></div>
@@ -664,7 +663,7 @@
         <p class="help">Select a reason (required). You can add extra notes too. This is saved in notes history.</p>
         <div class="reason-list" id="lostReasonList"></div>
         <label for="lostExtraNote" style="display:block;font-size:13px;font-weight:600;margin-bottom:7px;">Additional notes <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
-        <textarea id="lostExtraNote" placeholder="Any extra context…"></textarea>
+        <textarea id="lostExtraNote" placeholder="Any extra contextâ€¦"></textarea>
         <div class="lost-actions">
           <button type="button" class="btn btn-secondary" id="cancelLostBtn">Cancel</button>
           <button type="button" class="btn btn-primary" id="confirmLostBtn">Confirm closed lost</button>
@@ -674,7 +673,7 @@
       <div class="note-regular" id="regularNotesBlock">
       <form id="noteForm">
         <label for="noteBody" style="display:block;font-size:13px;font-weight:600;margin-bottom:7px;">Add note / comment</label>
-        <textarea id="noteBody" placeholder="Call notes, quote discussion, next steps…" required></textarea>
+        <textarea id="noteBody" placeholder="Call notes, quote discussion, next stepsâ€¦" required></textarea>
         <button type="submit" class="btn btn-primary" id="saveNoteBtn">Add note</button>
       </form>
       <div class="notes-title">Notes history</div>
@@ -688,7 +687,7 @@
   <div id="setupBanner" class="setup-banner" hidden></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="js/supabase-config.js?v=allow1"></script>
-  <script src="js/leads-db-auth.js?v=allow1"></script>
+  <script src="js/leads-db-auth.js?v=allow2"></script>
   <script>
     const productLabels = {
       solar: "Solar",
@@ -1654,7 +1653,7 @@
       googleSignInBtn.addEventListener("click", async () => {
         clearLoginError();
         googleSignInBtn.disabled = true;
-        googleSignInBtn.textContent = "Redirecting to Google…";
+        googleSignInBtn.textContent = "Redirecting to Googleâ€¦";
         try {
           await window.VoltarisDB.signInWithGoogle();
         } catch (err) {
