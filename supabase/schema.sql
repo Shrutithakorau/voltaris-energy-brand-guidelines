@@ -36,7 +36,8 @@ alter table public.leads enable row level security;
 alter table public.notes enable row level security;
 
 -- MVP: allow anon key access from the static web app.
--- Tighten later with Supabase Auth (recommended before production).
+-- After Google SSO is enabled, run supabase/require-authenticated-rls.sql
+-- so only signed-in users can read/write leads and notes.
 drop policy if exists "anon_leads_all" on public.leads;
 create policy "anon_leads_all"
   on public.leads

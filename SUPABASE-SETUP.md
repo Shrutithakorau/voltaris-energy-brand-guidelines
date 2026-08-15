@@ -41,8 +41,7 @@ window.SUPABASE_CONFIG = {
 
 ## Security note
 
-Current RLS allows the anon key to read/write leads (fine for MVP/internal use).  
-Before production, add **Supabase Auth** and tighten policies.
+Google SSO is built into `leads.html`. Follow **[GOOGLE-AUTH-SETUP.md](GOOGLE-AUTH-SETUP.md)** to enable the Google provider, then run `supabase/require-authenticated-rls.sql` so only signed-in users can access leads.
 
 ## Optional: migrate old local SQLite leads
 

@@ -53,7 +53,14 @@
       }
       client = window.supabase.createClient(
         window.SUPABASE_CONFIG.url,
-        window.SUPABASE_CONFIG.anonKey
+        window.SUPABASE_CONFIG.anonKey,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+          },
+        }
       );
     }
     return client;
@@ -373,9 +380,60 @@
     throw new Error("Not found");
   }
 
+
+  async function getSession() {
+    const db = getClient();
+    const { data, error } = await db.auth.getSession();
+    if (error) throw new Error(error.message);
+    return data.session || null;
+  }
+
+  async function getUser() {
+    const session = await getSession();
+    return session ? session.user : null;
+  }
+
+  function onAuthStateChange(callback) {
+    const db = getClient();
+    const { data } = db.auth.onAuthStateChange((event, session) => {
+      callback(event, session);
+    });
+    return data.subscription;
+  }
+
+  async function signInWithGoogle() {
+    const db = getClient();
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { data, error } = await db.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async function signOut() {
+    const db = getClient();
+    const { error } = await db.auth.signOut();
+    if (error) throw new Error(error.message);
+    return true;
+  }
+
   window.VoltarisDB = {
     api,
     configured,
     health,
+    getClient,
+    getSession,
+    getUser,
+    onAuthStateChange,
+    signInWithGoogle,
+    signOut,
   };
 })();
