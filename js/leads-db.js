@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Supabase-backed API shim matching the previous /api/* routes
  * used by leads.html
  */
